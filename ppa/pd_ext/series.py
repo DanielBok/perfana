@@ -36,16 +36,13 @@ class PpaSeriesAccessor:
         """
         return to_returns(self._obj, log)
 
-    def to_time_series(self, dates: Optional[DateTimes] = None):
+    def to_time_series(self, dates: DateTimes):
         """
         Creates a time series.
 
-        :param dates: str, iterable dates, optional
+        :param dates: str, iterable dates
             A list of dates
         :return: Series
             a time series
         """
-        if dates is None:
-            raise ValueError('<dates> cannot be none!')
-
         return to_time_series(self._obj, dates)

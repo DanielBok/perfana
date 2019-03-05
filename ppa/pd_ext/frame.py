@@ -50,11 +50,13 @@ class PpaFrameAccessor:
         """
         if type(dates) is str:
             col = dates
-            dates = self._obj.pop(col)
             try:
-                dates = pd.to_datetime(dates)
+                df = self._obj.copy()
+                dates = pd.to_datetime(df.pop(col))
+            except KeyError:
+                raise KeyError(f"Unable to find column <{col}>")
             except ValueError as e:
-                self.obj[col] = dates
                 raise ValueError(f"Unable to convert column <{col}> to datetime. ", e)
+            return to_time_series(df, dates)
 
         return to_time_series(self._obj, dates)
