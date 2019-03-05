@@ -2,10 +2,11 @@ from typing import Optional
 
 import pandas as pd
 
+from ppa.conversions import to_time_series
 from ppa.types import TimeSeriesData
 
 
-def infer_scale(r: TimeSeriesData, default_freq: Optional[str] = None) -> int:
+def infer_scale(data: TimeSeriesData, default_freq: Optional[str] = None) -> int:
     """
     Infers the scale of the time series.
 
@@ -13,7 +14,7 @@ def infer_scale(r: TimeSeriesData, default_freq: Optional[str] = None) -> int:
     will be cast as 'datetime' object and set as the index. In any case, if data is a pandas DataFrame or Series,
     the index will be cast as a datetime object.
 
-    :param r: DataFrame, Series, ndarray, iterable
+    :param data: DataFrame, Series, ndarray, iterable
         time series data object
     :param default_freq: str, optional
         default frequency to fall back on if unable to infer data
@@ -21,34 +22,28 @@ def infer_scale(r: TimeSeriesData, default_freq: Optional[str] = None) -> int:
         scale of data
     """
 
-    if not isinstance(r, (pd.DataFrame, pd.Series)):
+    if not isinstance(data, (pd.DataFrame, pd.Series)):
         if default_freq is None:
             raise ValueError('<freq> cannot be None when time series data does not have date index')
         return freq_to_scale(default_freq)
 
-    if isinstance(r, pd.DataFrame):
-        # look for date column in data frame. if exists, try converting index to datetime
-        for col in r.columns:
-            if col.lower() == 'date':
-                try:
-                    r.index = pd.to_datetime(r[col]).rename(None)
-                    r.pop(col)
-                    break
-                except TypeError:
-                    pass
+    try:
+        data = to_time_series(data)
+    except (ValueError, TypeError):
+        raise ValueError('could not cast data as time series')
 
     # try reading index and convert to dates. works if index is string dates
-    if not r.index.is_all_dates:
+    if not data.index.is_all_dates:
         try:
-            r.index = pd.to_datetime(r.index).rename(None)
+            data.index = pd.to_datetime(data.index).rename(None)
         except TypeError:
             # couldn't cast
             if default_freq is not None:
                 return freq_to_scale(default_freq)
 
     # custom inference
-    n = len(r)
-    time_delta = (r.index[1:] - r.index[:-1]).value_counts()
+    n = len(data)
+    time_delta = (data.index[1:] - data.index[:-1]).value_counts()
 
     delta = {
         'day': sum(time_delta.get(f'{day} days', 0) for day in range(1, 6)),  # 1 to 5 days - daily data
