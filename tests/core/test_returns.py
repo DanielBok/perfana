@@ -1,7 +1,7 @@
+import pandas as pd
 import pytest
 from numpy.testing import assert_array_almost_equal
-import numpy as np
-import pandas as pd
+
 from ppa.core.returns import *
 from ppa.exceptions import TimeIndexError, TimeIndexMismatchError
 
@@ -52,3 +52,15 @@ def test_excess_returns_raises_errors(retf):
         freq = 'W' if retf.ppa.frequency == 'daily' else 'D'
         bmk.index = pd.date_range('1680-01-01', periods=len(bmk), freq=freq)
         excess_returns(retf, bmk)
+
+
+def test_returns_relative(retf, expected_rel_returns):
+    rr = relative_returns(retf, retf)
+    assert_array_almost_equal(rr, expected_rel_returns)
+
+    # both series and uninformative names
+    ra, rb = retf['VTI'].rename(0), retf['BND'].rename(1)
+    assert_array_almost_equal(relative_returns(ra, rb), expected_rel_returns['VTI/BND'])
+
+    ra, rb = retf['VTI'].rename(2), retf['BND'].rename(1)
+    assert_array_almost_equal(relative_returns(ra, rb), expected_rel_returns['VTI/BND'])

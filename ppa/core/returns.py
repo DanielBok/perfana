@@ -7,7 +7,7 @@ from ppa.core.utils import freq_to_scale
 from ppa.exceptions import TimeIndexError, TimeIndexMismatchError
 from ppa.types import TimeSeriesData
 
-__all__ = ['annualized_returns', 'excess_returns']
+__all__ = ['annualized_returns', 'excess_returns', 'relative_returns']
 
 
 # def active_premium(ra: Vector, rb: Vector, freq='monthly'):
@@ -103,3 +103,46 @@ def excess_returns(ra: TimeSeriesData, rb: TimeSeriesData, freq: Optional[str] =
     rb = annualized_returns(rb, freq)
 
     return (ra - rb) / (1 + rb) if geometric else ra - rb
+
+
+def relative_returns(ra: TimeSeriesData, rb: TimeSeriesData, prefixes=('AST', 'BMK')):
+    """
+    Calculates the ratio of the cumulative performance for two assets through time
+
+    :param ra: iterable data
+        The assets returns vector or matrix
+    :param rb: iterable data
+        The benchmark returns
+    :param prefixes: Tuple[str, str], default ('AST', 'BMK')
+        Prefix to apply to overlapping column names in the left and right side, respectively. This is also applied
+        when the column name is an integer (i.e. 0 -> AST_0). It is the default name of the Series data if there
+        are no name to the Series
+    :return: Series, DataFrame.
+        Returns a DataFrame of the cumulative returns ratio between 2 asset classes.
+        Returns a Series if there is only 2 compared classes.
+    """
+    ra = to_time_series(ra)
+    rb = to_time_series(rb)
+
+    if isinstance(ra, pd.Series):
+        ra = pd.DataFrame(ra.rename(ra.name or prefixes[0]))
+
+    if isinstance(rb, pd.Series):
+        rb = pd.DataFrame(rb.rename(rb.name or prefixes[1]))
+
+    res = pd.DataFrame()
+    for ca, a in ra.iteritems():
+        for cb, b in rb.iteritems():
+            df = (pd.merge(a, b, 'outer', left_index=True, right_index=True).dropna() + 1).cumprod()
+            rel = df.iloc[:, 0] / df.iloc[:, 1]
+
+            if isinstance(ca, int):
+                ca = f'{prefixes[0]}_{ca}'
+            if isinstance(cb, int):
+                cb = f'{prefixes[1]}_{cb}'
+
+            res = pd.merge(res, rel.rename(f'{ca}/{cb}'), 'outer', left_index=True, right_index=True)
+
+    if res.shape[1] == 1:
+        return res.iloc[:, 0]
+    return res

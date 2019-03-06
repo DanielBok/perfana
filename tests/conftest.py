@@ -27,3 +27,8 @@ def expected_returns():
 @pytest.fixture
 def expected_log_returns():
     return pd.read_csv(path.join(TEST_DATA_DIR, 'log_returns.csv'), index_col=0, parse_dates=[0])
+
+
+@pytest.fixture
+def expected_rel_returns():
+    return pd.read_csv(path.join(TEST_DATA_DIR, 'relative_returns.csv'), index_col=0, parse_dates=[0])
