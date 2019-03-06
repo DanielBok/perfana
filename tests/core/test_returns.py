@@ -11,6 +11,22 @@ def retf(etf):
     return etf.ppa.to_returns()
 
 
+@pytest.mark.parametrize("col_a, col_b, expected", [
+    (['VBK', 'BND', 'VTI', 'VWO'], ['VBK', 'BND', 'VTI', 'VWO'],
+     [[0, -0.0553853450601067, -0.0104068323363791, -0.0639390330747389],
+      [0.0553853450601067, 0, 0.0449785127237277, -0.00855368801463219],
+      [0.0104068323363791, -0.0449785127237277, 0, -0.0535322007383598],
+      [0.0639390330747389, 0.00855368801463219, 0.0535322007383598, 0]]),
+    ('VBK', 'BND', [[0.0553853450601067]])
+])
+def test_active_premium(retf, col_a, col_b, expected):
+    ra, rb = retf[col_a], retf[col_b]
+
+    assert_array_almost_equal(active_premium(ra, rb), expected)
+
+    assert_array_almost_equal(active_premium(ra.values, rb.values, 'daily'), expected)
+
+
 @pytest.mark.parametrize("geometric, expected", [
     (True, [0.0916094100561804, 0.0362240649960737, 0.0812025777198013, 0.0276703769814415]),
     (False, [0.115486372414379, 0.0365847615014861, 0.0978013892823243, 0.0713152592864056])

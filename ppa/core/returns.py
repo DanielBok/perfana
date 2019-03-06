@@ -7,11 +7,55 @@ from ppa.core.utils import freq_to_scale
 from ppa.exceptions import TimeIndexError, TimeIndexMismatchError
 from ppa.types import TimeSeriesData
 
-__all__ = ['annualized_returns', 'excess_returns', 'relative_returns']
+__all__ = ['active_premium', 'annualized_returns', 'excess_returns', 'relative_returns']
 
 
-# def active_premium(ra: Vector, rb: Vector, freq='monthly'):
-#     pass
+def active_premium(ra: TimeSeriesData, rb: TimeSeriesData, freq: Optional[str] = None, geometric=True,
+                   prefixes=('AST', 'BMK')):
+    """
+    The return on an investment's annualized return minus the benchmark's annualized return.
+
+    :param ra: iterable data
+        The assets returns vector or matrix
+    :param rb: iterable data
+        The benchmark returns
+    :param freq: str, optional
+        frequency of the data. Use one of [daily, weekly, monthly, quarterly, semi-annually, yearly]
+    :param geometric: boolean, default True
+        If True, calculates the geometric returns. Otherwise, calculates the arithmetic returns
+    :param prefixes: Tuple[str, str], default ('AST', 'BMK')
+        Prefix to apply to overlapping column names in the left and right side, respectively. This is also applied
+        when the column name is an integer (i.e. 0 -> AST_0). It is the default name of the Series data if there
+        are no name to the Series
+
+    :return: DataFrame.
+        Active premium of each strategy against benchmark
+    """
+    ra = to_time_series(ra)
+    rb = to_time_series(rb)
+
+    if isinstance(ra, pd.Series):
+        ra = pd.DataFrame(ra.rename(ra.name or prefixes[0]))
+
+    if isinstance(rb, pd.Series):
+        rb = pd.DataFrame(rb.rename(rb.name or prefixes[1]))
+
+    freq = _determine_frequency(ra, rb, freq)
+
+    res = pd.DataFrame()
+    for ca, a in ra.iteritems():
+        premium = {}
+        if isinstance(ca, int):
+            ca = f'{prefixes[0]}_{ca}'
+
+        for cb, b in rb.iteritems():
+            if isinstance(cb, int):
+                cb = f'{prefixes[1]}_{cb}'
+
+            premium[cb] = annualized_returns(a, freq, geometric) - annualized_returns(b, freq, geometric)
+        res[ca] = pd.Series(premium)
+
+    return res
 
 
 def annualized_returns(r: TimeSeriesData, freq: Optional[str] = None, geometric=True) -> Union[float, pd.Series]:
@@ -88,16 +132,7 @@ def excess_returns(ra: TimeSeriesData, rb: TimeSeriesData, freq: Optional[str] =
     if ra.ndim == rb.ndim and ra.shape != rb.shape:
         raise ValueError('The shapes of the asset and benchmark returns do not match!')
 
-    if freq is None:
-        fa, fb = ra.ppa.frequency, rb.ppa.frequency
-        if fa is None and fb is None:
-            raise TimeIndexError
-        elif fa is None:
-            freq = fb
-        elif fb is None:
-            freq = fa
-        elif fa != fb:
-            raise TimeIndexMismatchError(fa, fb)
+    freq = _determine_frequency(ra, rb, freq)
 
     ra = annualized_returns(ra, freq)
     rb = annualized_returns(rb, freq)
@@ -146,3 +181,20 @@ def relative_returns(ra: TimeSeriesData, rb: TimeSeriesData, prefixes=('AST', 'B
     if res.shape[1] == 1:
         return res.iloc[:, 0]
     return res
+
+
+def _determine_frequency(ra, rb, freq):
+    if freq is None:
+        fa, fb = ra.ppa.frequency, rb.ppa.frequency
+        if fa is None and fb is None:
+            raise TimeIndexError
+        elif fa is None:
+            freq = fb
+        elif fb is None:
+            freq = fa
+        elif fa != fb:
+            raise TimeIndexMismatchError(fa, fb)
+        else:
+            freq = fa
+
+    return freq
