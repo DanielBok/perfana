@@ -61,7 +61,7 @@ def to_returns(prices: TimeSeriesData, log=False):
         return prices / prices.shift(1) - 1
 
 
-def to_time_series(data, dates: Optional[DateTimes] = None) -> Union[pd.Series, pd.DataFrame]:
+def to_time_series(data, dates: Optional[DateTimes] = None, fail_policy='ignore') -> Union[pd.Series, pd.DataFrame]:
     """
     Casts the input data to a time series DataFrame or Series
 
@@ -70,8 +70,11 @@ def to_time_series(data, dates: Optional[DateTimes] = None) -> Union[pd.Series, 
         a DataFrame. If data is already a DataFrame and has a column named 'date' (caps insensitive), that column will
         become the index of the data. All the remaining data must be floats
     :param dates: iterable date or str
-        Sets the (datetime) index of the Series or DataFrame. If list of strings, each string must be convertable to
+        Sets the (datetime) index of the Series or DataFrame. If list of strings, each string must be convertible to
         a datetime object.
+    :param fail_policy: str, default 'ignore'
+        Policy to use when no dates can be set as index. Use one of [ignore, raise]. If ignore, function will continue
+        as is. If raise, an error will be raised when no dates can be set.
     :return: Series, DataFrame
         a time series Series or DataFrame
     """
@@ -86,14 +89,20 @@ def to_time_series(data, dates: Optional[DateTimes] = None) -> Union[pd.Series, 
     else:
         raise ValueError('data can only be 1 or 2 dimensional')
 
+    fail_policy = fail_policy.lower()
+    if fail_policy not in ('ignore', 'raise'):
+        raise ValueError(f"Unknown <fail_policy>: {fail_policy}. Use one of [ignore, raise]")
+
     if dates is not None:
         dates = pd.to_datetime(dates).rename(None)
         data.index = dates
     elif dates is None and isinstance(data, pd.DataFrame):
         for col in data.columns:
-            if col.lower() == 'date':
+            if str(col).lower() == 'date':
                 data = data.copy()
                 data.index = pd.to_datetime(data.pop(col)).rename(None)
                 break
+    elif fail_policy == 'raise':
+        raise ValueError(f"unable to add date to data index")
 
     return data.astype(float)

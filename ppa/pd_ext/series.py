@@ -1,10 +1,11 @@
-from typing import Optional, Union
+from typing import Union
 
 import pandas as pd
 from pandas.api.extensions import register_series_accessor
 
 from ppa.conversions import *
 from ppa.types import DateTimes
+from ppa.core.utils import infer_frequency
 
 
 @register_series_accessor('ppa')
@@ -46,3 +47,8 @@ class PpaSeriesAccessor:
             a time series
         """
         return to_time_series(self._obj, dates)
+
+    @property
+    def frequency(self):
+        """Frequency (periodicity) of the data"""
+        return infer_frequency(self._obj, 'ignore')
