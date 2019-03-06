@@ -1,16 +1,13 @@
-from typing import Optional
-
 import pandas as pd
 
-from ppa.conversions import to_time_series
 from ppa.types import TimeSeriesData
 
-__all__ = ['freq_to_scale', 'infer_frequency', 'infer_scale']
+__all__ = ['freq_to_scale', 'infer_frequency']
 
 
 def freq_to_scale(freq: str):
     """Converts frequency to scale"""
-    freq = freq.lower()
+    freq = str(freq).lower()
     if freq in ('d', 'day', 'daily'):
         return 252
     elif freq in ('w', 'week', 'weekly'):
@@ -71,42 +68,3 @@ def infer_frequency(data: TimeSeriesData, fail_policy='raise'):
         raise TypeError('could not infer periodicity of time series index')
     else:
         return None
-
-
-def infer_scale(data: TimeSeriesData, default_freq: Optional[str] = None) -> int:
-    """
-    Infers the scale of the time series.
-
-    If data is a pandas DataFrame and a column named 'Date' exists, column will be removed. In turn, the same column
-    will be cast as 'datetime' object and set as the index. In any case, if data is a pandas DataFrame or Series,
-    the index will be cast as a datetime object.
-
-    :param data: DataFrame, Series, ndarray, iterable
-        time series data object
-    :param default_freq: str, optional
-        default frequency to fall back on if unable to infer data
-    :return: int
-        scale of data
-    """
-
-    if not isinstance(data, (pd.DataFrame, pd.Series)):
-        if default_freq is None:
-            raise ValueError('<freq> cannot be None when time series data does not have date index')
-        return freq_to_scale(default_freq)
-
-    try:
-        data = to_time_series(data)
-    except (ValueError, TypeError):
-        raise ValueError('could not cast data as time series')
-
-    # try reading index and convert to dates. works if index is string dates
-    if not data.index.is_all_dates:
-        try:
-            data.index = pd.to_datetime(data.index).rename(None)
-        except TypeError:
-            # couldn't cast
-            if default_freq is not None:
-                return freq_to_scale(default_freq)
-
-    freq = infer_frequency(data)
-    return freq_to_scale(freq)
