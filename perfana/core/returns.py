@@ -10,26 +10,53 @@ from perfana.types import TimeSeriesData
 __all__ = ['active_premium', 'annualized_returns', 'excess_returns', 'relative_returns']
 
 
-def active_premium(ra: TimeSeriesData, rb: TimeSeriesData, freq: Optional[str] = None, geometric=True,
-                   prefixes=('AST', 'BMK')):
+def active_premium(ra: TimeSeriesData,
+                   rb: TimeSeriesData,
+                   freq: Optional[str] = None,
+                   geometric=True,
+                   prefixes=('AST', 'BMK')) -> TimeSeriesData:
     """
     The return on an investment's annualized return minus the benchmark's annualized return.
 
-    :param ra: iterable data
+    Parameters
+    ----------
+    ra:
         The assets returns vector or matrix
-    :param rb: iterable data
+
+    rb:
         The benchmark returns
-    :param freq: str, optional
-        frequency of the data. Use one of [daily, weekly, monthly, quarterly, semi-annually, yearly]
-    :param geometric: boolean, default True
+    freq:
+        Frequency of the data. Use one of daily, weekly, monthly, quarterly, semi-annually, yearly
+
+    geometric:
         If True, calculates the geometric returns. Otherwise, calculates the arithmetic returns
-    :param prefixes: Tuple[str, str], default ('AST', 'BMK')
+
+    prefixes:
         Prefix to apply to overlapping column names in the left and right side, respectively. This is also applied
         when the column name is an integer (i.e. 0 -> AST_0). It is the default name of the Series data if there
         are no name to the Series
 
-    :return: DataFrame.
+    Returns
+    -------
+    TimeSeriesData
         Active premium of each strategy against benchmark
+
+    Examples
+    --------
+    >>> from perfana.datasets import load_etf
+    >>> from perfana.core import active_premium
+    # Get returns starting from the date where all etf has data
+    >>> etf = load_etf().dropna().ppa.to_returns().dropna()
+    >>> active_premium(etf, etf)
+              VBK       BND       VTI       VWO
+    VBK  0.000000 -0.055385 -0.010407 -0.063939
+    BND  0.055385  0.000000  0.044979 -0.008554
+    VTI  0.010407 -0.044979  0.000000 -0.053532
+    VWO  0.063939  0.008554  0.053532  0.000000
+
+    >>> active_premium(etf.VBK, etf.BND)
+              VBK
+    BND  0.055385
     """
     ra = to_time_series(ra)
     rb = to_time_series(rb)
@@ -58,30 +85,55 @@ def active_premium(ra: TimeSeriesData, rb: TimeSeriesData, freq: Optional[str] =
     return res
 
 
-def annualized_returns(r: TimeSeriesData, freq: Optional[str] = None, geometric=True) -> Union[float, pd.Series]:
-    """
+def annualized_returns(r: TimeSeriesData,
+                       freq: Optional[str] = None,
+                       geometric=True) -> Union[float, pd.Series]:
+    r"""
     Calculates the annualized returns from the data
 
     The formula for annualized geometric returns is formulated by raising the compound return to the number of
     periods in a year, and taking the root to the number of total observations:
 
-        prod(1 + R)^(scale/n) - 1
+    .. math::
+        \prod_i^N(1 + r_i)^{scale/N} - 1
 
-    where scale is the number of observations in a year, and n is the total number of observations.
+    where scale is the number of observations in a year, and N is the total number of observations.
 
     For simple returns (geometric=FALSE), the formula is:
 
-        mean(R)*scale
+    .. math::
+        \frac{scale}{N} \sum^N_i r_i
 
-    :param r: iterable data
-        numeric returns series or data frame
-    :param freq: str, optional
-        frequency of the data. Use one of [daily, weekly, monthly, quarterly, semi-annually, yearly]
-    :param geometric: boolean, default True
+
+    Parameters
+    ----------
+    r:
+        Numeric returns series or data frame
+
+    freq:
+        Frequency of the data. Use one of daily, weekly, monthly, quarterly, semi-annually, yearly
+
+    geometric:
         If True, calculates the geometric returns. Otherwise, calculates the arithmetic returns
 
-    :return: float, pd.Series
-        annualized returns
+    Returns
+    -------
+    float or Series
+        Annualized returns
+
+    Examples
+    --------
+    >>> from perfana.datasets import load_etf
+    >>> from perfana.core import active_premium
+    # Get returns starting from the date where all etf has data
+    >>> etf = load_etf().dropna().ppa.to_returns().dropna()
+    VBK    0.091609
+    BND    0.036224
+    VTI    0.081203
+    VWO    0.027670
+    dtype: float64
+    >>> annualized_returns(etf.VWO)
+    0.02767037698144148
     """
     r = to_time_series(r).dropna()
     if freq is None:
@@ -95,33 +147,61 @@ def annualized_returns(r: TimeSeriesData, freq: Optional[str] = None, geometric=
         return r.mean() * scale
 
 
-def excess_returns(ra: TimeSeriesData, rb: TimeSeriesData, freq: Optional[str] = None, geometric=True):
-    """
+def excess_returns(ra: TimeSeriesData,
+                   rb: TimeSeriesData,
+                   freq: Optional[str] = None,
+                   geometric=True) -> TimeSeriesData:
+    r"""
     An average annualized excess return is convenient for comparing excess returns
 
     Excess returns is calculated by first annualizing the asset returns and benchmark returns stream. See the docs for
     `annualized_returns()` for more details. The geometric returns formula is:
 
+    .. math::
         r_g = (ra - rb) / (1 + rb)
 
     The arithmetic excess returns formula is:
 
+    .. math::
         r_g = ra - rb
 
     Returns calculation will be truncated by the one with the shorter length. Also, annualized returns are calculated
     by the geometric annualized returns in both cases
 
-    :param ra: iterable data
+    Parameters
+    ----------
+    ra
         The assets returns vector or matrix
-    :param rb: iterable data
+
+    rb:
         The benchmark returns. If this is a vector and the asset returns is a matrix, then all assets returns (columns)
         will be compared against this single benchmark. Otherwise, if this is a matrix, then assets will be compared
         to each individual benchmark (i.e. column for column)
-    :param freq: str, optional
-        frequency of the data. Use one of [daily, weekly, monthly, quarterly, semi-annually, yearly]
-    :param geometric: boolean, default True
+
+    freq:
+        Frequency of the data. Use one of [daily, weekly, monthly, quarterly, semi-annually, yearly]
+
+    geometric
         If True, calculates the geometric excess returns. Otherwise, calculates the arithmetic excess returns
-    :return:
+
+    Returns
+    -------
+    TimeSeriesData
+        Excess returns of each strategy against benchmark
+
+    Examples
+    --------
+    >>> from perfana.datasets import load_etf
+    >>> from perfana.core import active_premium
+    # Get returns starting from the date where all etf has data
+    >>> etf = load_etf().dropna().ppa.to_returns().dropna()
+    >>> excess_returns(etf, etf.VBK)
+    VBK    0.000000
+    BND   -0.050737
+    VTI   -0.009533
+    VWO   -0.058573
+    dtype: float64
+
     """
     ra = to_time_series(ra).dropna()
     rb = to_time_series(rb).dropna()
@@ -140,21 +220,45 @@ def excess_returns(ra: TimeSeriesData, rb: TimeSeriesData, freq: Optional[str] =
     return (ra - rb) / (1 + rb) if geometric else ra - rb
 
 
-def relative_returns(ra: TimeSeriesData, rb: TimeSeriesData, prefixes=('AST', 'BMK')):
+def relative_returns(ra: TimeSeriesData,
+                     rb: TimeSeriesData,
+                     prefixes=('AST', 'BMK')) -> TimeSeriesData:
     """
     Calculates the ratio of the cumulative performance for two assets through time
 
-    :param ra: iterable data
+    Parameters
+    ----------
+    ra:
         The assets returns vector or matrix
-    :param rb: iterable data
+
+    rb:
         The benchmark returns
-    :param prefixes: Tuple[str, str], default ('AST', 'BMK')
+
+    prefixes:
         Prefix to apply to overlapping column names in the left and right side, respectively. This is also applied
         when the column name is an integer (i.e. 0 -> AST_0). It is the default name of the Series data if there
         are no name to the Series
-    :return: Series, DataFrame.
+
+    Returns
+    -------
+    TimeSeriesData
         Returns a DataFrame of the cumulative returns ratio between 2 asset classes.
         Returns a Series if there is only 2 compared classes.
+
+    Examples
+    --------
+    >>> from perfana.datasets import load_etf
+    >>> from perfana.core import active_premium
+    # Get returns starting from the date where all etf has data
+    >>> etf = load_etf().dropna().ppa.to_returns().dropna()
+    >>> relative_returns(etf.tail(), etf.VBK.tail())
+                VBK/VBK   BND/VBK   VTI/VBK   VWO/VBK
+    Date
+    2019-02-25      1.0  0.996027  0.997856  1.009737
+    2019-02-26      1.0  1.004013  1.002591  1.013318
+    2019-02-27      1.0  0.997005  0.997934  1.000389
+    2019-02-28      1.0  1.001492  1.001461  0.998348
+    2019-03-01      1.0  0.987385  0.997042  0.988521
     """
     ra = to_time_series(ra)
     rb = to_time_series(rb)

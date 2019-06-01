@@ -4,8 +4,8 @@ import pandas as pd
 from pandas.api.extensions import register_dataframe_accessor
 
 from perfana.conversions import *
-from perfana.types import DateTimes, Vector
 from perfana.core.utils import infer_frequency
+from perfana.types import DateTimes, TimeSeriesData, Vector
 
 
 @register_dataframe_accessor('ppa')
@@ -13,40 +13,55 @@ class PpaFrameAccessor:
     def __init__(self, pd_obj: pd.DataFrame):
         self._obj = pd_obj
 
-    def to_prices(self, start: Union[Vector, float, int] = 100., log=False):
+    def to_prices(self, start: Union[Vector, float, int] = 100., log: bool = False) -> pd.DataFrame:
         """
         Creates a returns data frame to price data frame
 
-        :param start: iterable numeric or scalar numeric
+        Parameters
+        ----------
+        start:
             the starting prices
-        :param log: boolean, default False
+        log:
             If data is a log returns data, set this to True
-        :return: DataFrame
-            asset prices data
+
+        Returns
+        -------
+        DataFrame
+            Asset price data
         """
         return to_prices(self._obj, start, log)
 
-    def to_returns(self, log=False):
+    def to_returns(self, log: bool = False) -> pd > TimeSeriesData:
         """
         Creates a price data frame from returns data frame
 
-        :param log: boolean, default False
+        Parameters
+        ----------
+        log:
             If True, calculate the log returns. Otherwise, calculates the arithmetic returns
-        :return: DataFrame
-            asset returns data
+
+        Returns
+        -------
+        DataFrame
+            Asset returns data
         """
         return to_returns(self._obj, log)
 
-    def to_time_series(self, dates: Optional[Union[str, Iterable[DateTimes]]] = None):
+    def to_time_series(self, dates: Optional[Union[str, Iterable[DateTimes]]] = None) -> pd.DataFrame:
         """
-        Creates a time series data frame. If <dates> is not specified, method will attempt to look for a column named
-        'date' to make as the index. Otherwise, you can specify the date column name in the <dates> argument or pass in
-        a list of dates
+        Creates a time series data frame. If <dates> is not specified, method will attempt to look
+        for a column named 'date' to make as the index. Otherwise, you can specify the date column
+        name in the <dates> argument or pass in a list of dates
 
-        :param dates: str, iterable dates, optional
-            if string, will attempt to look for a column in DataFrame and cast it as date. Otherwise, pass in a list of
-            dates. By default, it will look for a column named 'Date' in the data frame
-        :return: DataFrame
+        Parameters
+        ----------
+        dates:
+            If string, will attempt to look for a column in DataFrame and cast it as date. Otherwise,
+            pass in a list of dates. By default, it will look for a column named 'Date' in the data frame
+
+        Returns
+        -------
+        DataFrame
             a time series DataFrame
         """
         if type(dates) is str:

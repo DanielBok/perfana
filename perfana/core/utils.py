@@ -28,13 +28,24 @@ def infer_frequency(data: TimeSeriesData, fail_policy='raise'):
     """
     Infers the frequency (periodicity) of the time series
 
-    :param data: DataFrame, Series.
+    Parameters
+    ----------
+    data:
         time series pandas data object
-    :param fail_policy: str, default 'raise'.
-        Action to do when frequency cannot be inferred. If set to 'raise', a TypeError will be raised. If set to
-        'ignore', a NoneType will be returned on failure.
-    :returns:
-        Frequency of data. If <fail_policy> is ignore, returns None.
+
+    fail_policy:
+        Action to do when frequency cannot be inferred. If set to 'raise', a TypeError will be raised.
+        If set to 'ignore', a NoneType will be returned on failure.
+
+    Returns
+    -------
+    str
+        Frequency of data. If :code:`fail_policy` is ignore, returns None.
+
+    Raises
+    ------
+    TypeError:
+        If :code:`fail_policy` is set to 'raise' and frequency cannot be inferred
     """
     if not isinstance(data, (pd.DataFrame, pd.Series)):
         raise ValueError('<data> must be a pandas DataFrame or Series')
