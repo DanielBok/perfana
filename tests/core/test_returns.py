@@ -2,8 +2,8 @@ import pandas as pd
 import pytest
 from numpy.testing import assert_array_almost_equal
 
-from ppa.core.returns import *
-from ppa.exceptions import TimeIndexError, TimeIndexMismatchError
+from perfana.core.returns import *
+from perfana.exceptions import TimeIndexError, TimeIndexMismatchError
 
 
 @pytest.fixture

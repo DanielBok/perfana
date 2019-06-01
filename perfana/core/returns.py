@@ -2,10 +2,10 @@ from typing import Optional, Union
 
 import pandas as pd
 
-from ppa.conversions import to_time_series
-from ppa.core.utils import freq_to_scale
-from ppa.exceptions import TimeIndexError, TimeIndexMismatchError
-from ppa.types import TimeSeriesData
+from perfana.conversions import to_time_series
+from perfana.core.utils import freq_to_scale
+from perfana.exceptions import TimeIndexError, TimeIndexMismatchError
+from perfana.types import TimeSeriesData
 
 __all__ = ['active_premium', 'annualized_returns', 'excess_returns', 'relative_returns']
 

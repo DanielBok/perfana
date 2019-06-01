@@ -3,9 +3,9 @@ from typing import Iterable, Optional, Union
 import pandas as pd
 from pandas.api.extensions import register_dataframe_accessor
 
-from ppa.conversions import *
-from ppa.types import DateTimes, Vector
-from ppa.core.utils import infer_frequency
+from perfana.conversions import *
+from perfana.types import DateTimes, Vector
+from perfana.core.utils import infer_frequency
 
 
 @register_dataframe_accessor('ppa')

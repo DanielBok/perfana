@@ -3,7 +3,7 @@ from os import path
 import pandas as pd
 import pytest
 
-from ppa.conversions import to_time_series
+from perfana.conversions import to_time_series
 
 DATA_DIR = path.abspath(path.join(path.dirname(__file__), '..'))
 TEST_DATA_DIR = path.join(path.dirname(__file__), 'data')

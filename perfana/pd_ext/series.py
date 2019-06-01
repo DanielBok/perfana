@@ -3,9 +3,9 @@ from typing import Union
 import pandas as pd
 from pandas.api.extensions import register_series_accessor
 
-from ppa.conversions import *
-from ppa.types import DateTimes
-from ppa.core.utils import infer_frequency
+from perfana.conversions import *
+from perfana.types import DateTimes
+from perfana.core.utils import infer_frequency
 
 
 @register_series_accessor('ppa')

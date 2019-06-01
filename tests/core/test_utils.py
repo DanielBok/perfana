@@ -1,7 +1,7 @@
 import pandas as pd
 import pytest
 
-from ppa.core.utils import *
+from perfana.core.utils import *
 
 
 @pytest.mark.parametrize('freq, expected', [

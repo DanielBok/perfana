@@ -4,7 +4,7 @@ from typing import Optional, Union
 import numpy as np
 import pandas as pd
 
-from ppa.types import DateTimes, TimeSeriesData, Vector
+from perfana.types import DateTimes, TimeSeriesData, Vector
 
 __all__ = ['to_prices', 'to_returns', 'to_time_series']
 

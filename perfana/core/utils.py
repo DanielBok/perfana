@@ -1,6 +1,6 @@
 import pandas as pd
 
-from ppa.types import TimeSeriesData
+from perfana.types import TimeSeriesData
 
 __all__ = ['freq_to_scale', 'infer_frequency']
 
