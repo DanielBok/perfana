@@ -1,0 +1,17 @@
+include MANIFEST.in
+include LICENSE
+include README.md
+include setup.py
+include *.rst
+
+recursive-include perfana/datasets *.csv
+
+global-exclude *.py[co]
+
+prune .pytest_cache
+prune docs
+
+graft perfana
+
+include versioneer.py
+include perfana/_version.py
