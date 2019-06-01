@@ -17,7 +17,6 @@ def test_to_time_series(etf_raw):
     df = etf_raw.copy()
     dates = df.pop('Date')
     ts = df.ppa.to_time_series(dates)
-    print(len(etf_raw.columns))
     assert len(ts) == len(etf_raw)
     assert len(ts.columns) == len(etf_raw.columns) - 1
 

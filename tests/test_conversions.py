@@ -1,10 +1,6 @@
-from os import path
-
 from numpy.testing import assert_array_almost_equal
 
 from perfana.conversions import to_prices, to_returns, to_time_series
-
-DATA_DIR = path.join(path.dirname(__file__), 'data')
 
 
 def test_to_returns_and_prices(etf_raw, expected_returns):

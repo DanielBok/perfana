@@ -4,14 +4,14 @@ import pandas as pd
 import pytest
 
 from perfana.conversions import to_time_series
+from perfana.datasets import load_etf
 
-DATA_DIR = path.abspath(path.join(path.dirname(__file__), '..'))
 TEST_DATA_DIR = path.join(path.dirname(__file__), 'data')
 
 
 @pytest.fixture
 def etf_raw():
-    return pd.read_csv(path.join(DATA_DIR, 'data', 'etf.csv')).dropna()
+    return load_etf(False).dropna()
 
 
 @pytest.fixture
