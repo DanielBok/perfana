@@ -31,7 +31,7 @@ class PpaFrameAccessor:
         """
         return to_prices(self._obj, start, log)
 
-    def to_returns(self, log: bool = False) -> pd > TimeSeriesData:
+    def to_returns(self, log: bool = False) -> TimeSeriesData:
         """
         Creates a price data frame from returns data frame
 

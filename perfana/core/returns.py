@@ -25,6 +25,7 @@ def active_premium(ra: TimeSeriesData,
 
     rb:
         The benchmark returns
+
     freq:
         Frequency of the data. Use one of daily, weekly, monthly, quarterly, semi-annually, yearly
 
