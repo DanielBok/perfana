@@ -1,16 +1,18 @@
-from typing import List, Optional, Union
+from typing import List, Optional
 
 import numpy as np
+import pandas as pd
 import plotly.graph_objs as go
 
 from ._plot import plot
+from ._type import GRAPH_OUTPUT
 
 __all__ = ['allocation_chart']
 
 
 def allocation_chart(weights: np.ndarray,
                      asset_names: Optional[List[str]] = None,
-                     portfolio_names: Optional[List[str]] = None) -> Optional[Union[List[dict], str]]:
+                     portfolio_names: Optional[List[str]] = None) -> GRAPH_OUTPUT:
     """
     Plots the allocation chart
 
@@ -28,9 +30,11 @@ def allocation_chart(weights: np.ndarray,
 
     Returns
     -------
-    Any
+    Graph Description
         The allocation chart object if on a python console or Jupyter notebook.
         If used in app, returns the dictionary to form the graphs on the frontend
+    DataFrame
+        The underlying dataset in a dataframe
     """
     weights = np.asarray(weights)
     if weights.ndim == 1:
@@ -67,4 +71,6 @@ def allocation_chart(weights: np.ndarray,
     )
 
     fig = go.Figure(data, layout)
-    return plot(fig)
+    table = pd.DataFrame({p: weights[:, i] for i, p in enumerate(portfolio_names)}, index=asset_names)
+
+    return plot(fig), table

@@ -4,6 +4,8 @@ from typing import Dict, List, Union
 import plotly.graph_objs as go
 from plotly.offline import offline as o
 
+from ._type import GRAPH_DESC
+
 __all__ = ["plot"]
 
 Graph = Union[
@@ -68,7 +70,7 @@ def plot(figure_or_data: Union[go.Figure, go.Data, Dict[str, Graph], List[Graph]
          include_mathjax=False,
          auto_play=True,
          animation_opts=None,
-         is_app_mode=False):
+         is_app_mode=False) -> GRAPH_DESC:
     """
     Plots the chart specified.
 
@@ -190,8 +192,9 @@ def plot(figure_or_data: Union[go.Figure, go.Data, Dict[str, Graph], List[Graph]
         frames, or auto_play is False.
 
     is_app_mode
-        If app mode is True, instead of plotting graphs, this function will return
-        a list of json objects that can be used by the front end for plotting.
+        If app mode is True, instead of plotting graphs, this function will return the
+        dictionary describing the figure. For app mode, the figure_or_data argument must
+        be a plotly.graph_obj.Figure instance.
 
     Returns
     -------
@@ -199,20 +202,18 @@ def plot(figure_or_data: Union[go.Figure, go.Data, Dict[str, Graph], List[Graph]
         The allocation chart object if on a python console or Jupyter notebook.
         If used in app, returns the dictionary to form the graphs on the frontend
     """
+
+    is_app_env = os.environ.get('RUNNING_APP', '0').upper() in ('1', 'TRUE')
+    if is_app_mode or is_app_env:
+        assert isinstance(figure_or_data, go.Figure)
+        return figure_or_data.to_dict()
+
     if _on_jupyter():
         if filename is None:
             filename = 'plot_image'
         return o.iplot(figure_or_data, validate=validate, image=image, filename=filename,
                        image_width=image_width, image_height=image_height, config=config,
                        auto_play=auto_play, animation_opts=animation_opts)
-
-    is_app_env = os.environ.get('RUNNING_APP', '0').upper() in ('1', 'TRUE')
-    if is_app_mode or is_app_env:
-        if isinstance(figure_or_data, dict):
-            return [v.to_dict() for _, v in figure_or_data.items()]
-        elif isinstance(figure_or_data, (list, tuple)):
-            return [i.to_dict() for i in figure_or_data]
-        return [figure_or_data.to_dict()]
 
     if filename is None:
         filename = 'temp-plot.html'
