@@ -8,7 +8,8 @@ cmdclass = versioneer.get_cmdclass()
 
 install_requires = [
     'numpy',
-    'pandas >=0.23'
+    'pandas >=0.23',
+    'plotly >=3.9'
 ]
 
 setup(
