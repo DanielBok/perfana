@@ -8,7 +8,7 @@ from perfana.exceptions import TimeIndexError, TimeIndexMismatchError
 
 @pytest.fixture
 def retf(etf):
-    return etf.ppa.to_returns()
+    return etf.pa.to_returns()
 
 
 @pytest.mark.parametrize("col_a, col_b, expected", [
@@ -65,7 +65,7 @@ def test_excess_returns_raises_errors(retf):
         excess_returns(arr_retf, arr_bmk)
 
     with pytest.raises(TimeIndexMismatchError):
-        freq = 'W' if retf.ppa.frequency == 'daily' else 'D'
+        freq = 'W' if retf.pa.frequency == 'daily' else 'D'
         bmk.index = pd.date_range('1680-01-01', periods=len(bmk), freq=freq)
         excess_returns(retf, bmk)
 

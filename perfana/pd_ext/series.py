@@ -8,8 +8,8 @@ from perfana.core.utils import infer_frequency
 from perfana.types import DateTimes
 
 
-@register_series_accessor('ppa')
-class PpaSeriesAccessor:
+@register_series_accessor('pa')
+class PaSeriesAccessor:
     def __init__(self, pd_obj: pd.Series):
         self._obj = pd_obj
 

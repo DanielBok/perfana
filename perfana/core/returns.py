@@ -47,7 +47,7 @@ def active_premium(ra: TimeSeriesData,
     >>> from perfana.datasets import load_etf
     >>> from perfana.core import active_premium
     # Get returns starting from the date where all etf has data
-    >>> etf = load_etf().dropna().ppa.to_returns().dropna()
+    >>> etf = load_etf().dropna().pa.to_returns().dropna()
     >>> active_premium(etf, etf)
               VBK       BND       VTI       VWO
     VBK  0.000000 -0.055385 -0.010407 -0.063939
@@ -127,7 +127,7 @@ def annualized_returns(r: TimeSeriesData,
     >>> from perfana.datasets import load_etf
     >>> from perfana.core import active_premium
     # Get returns starting from the date where all etf has data
-    >>> etf = load_etf().dropna().ppa.to_returns().dropna()
+    >>> etf = load_etf().dropna().pa.to_returns().dropna()
     VBK    0.091609
     BND    0.036224
     VTI    0.081203
@@ -138,7 +138,7 @@ def annualized_returns(r: TimeSeriesData,
     """
     r = to_time_series(r).dropna()
     if freq is None:
-        freq = r.ppa.frequency
+        freq = r.pa.frequency
 
     scale = freq_to_scale(freq)
 
@@ -195,7 +195,7 @@ def excess_returns(ra: TimeSeriesData,
     >>> from perfana.datasets import load_etf
     >>> from perfana.core import active_premium
     # Get returns starting from the date where all etf has data
-    >>> etf = load_etf().dropna().ppa.to_returns().dropna()
+    >>> etf = load_etf().dropna().pa.to_returns().dropna()
     >>> excess_returns(etf, etf.VBK)
     VBK    0.000000
     BND   -0.050737
@@ -251,7 +251,7 @@ def relative_returns(ra: TimeSeriesData,
     >>> from perfana.datasets import load_etf
     >>> from perfana.core import active_premium
     # Get returns starting from the date where all etf has data
-    >>> etf = load_etf().dropna().ppa.to_returns().dropna()
+    >>> etf = load_etf().dropna().pa.to_returns().dropna()
     >>> relative_returns(etf.tail(), etf.VBK.tail())
                 VBK/VBK   BND/VBK   VTI/VBK   VWO/VBK
     Date
@@ -290,7 +290,7 @@ def relative_returns(ra: TimeSeriesData,
 
 def _determine_frequency(ra, rb, freq):
     if freq is None:
-        fa, fb = ra.ppa.frequency, rb.ppa.frequency
+        fa, fb = ra.pa.frequency, rb.pa.frequency
         if fa is None and fb is None:
             raise TimeIndexError
         elif fa is None:

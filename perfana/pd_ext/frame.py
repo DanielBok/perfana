@@ -8,8 +8,8 @@ from perfana.core.utils import infer_frequency
 from perfana.types import DateTimes, TimeSeriesData, Vector
 
 
-@register_dataframe_accessor('ppa')
-class PpaFrameAccessor:
+@register_dataframe_accessor('pa')
+class PaFrameAccessor:
     def __init__(self, pd_obj: pd.DataFrame):
         self._obj = pd_obj
 

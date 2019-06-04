@@ -1,2 +1,2 @@
-from .frame import PpaFrameAccessor
-from .series import PpaSeriesAccessor
+from .frame import PaFrameAccessor
+from .series import PaSeriesAccessor

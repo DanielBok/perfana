@@ -8,7 +8,7 @@ ASSET = 'VTI'
 def series(etf_raw):
     dates = etf_raw.Date
     series = etf_raw[ASSET]
-    return series.ppa.to_time_series(dates)
+    return series.pa.to_time_series(dates)
 
 
 def test_to_time_series(etf_raw, series):
@@ -16,8 +16,8 @@ def test_to_time_series(etf_raw, series):
 
 
 def test_to_returns_and_prices(series, etf, expected_returns):
-    ret = series.ppa.to_returns()
+    ret = series.pa.to_returns()
     assert_array_almost_equal(ret, expected_returns[ASSET])
 
-    prices = ret.ppa.to_prices(etf.iloc[0][ASSET])
+    prices = ret.pa.to_prices(etf.iloc[0][ASSET])
     assert_array_almost_equal(prices, series)
