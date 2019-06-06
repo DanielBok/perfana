@@ -3,4 +3,4 @@ test:
 
 
 clean:
-	rm -rf .coverage build/
+	rm -rf .coverage build/ *.html

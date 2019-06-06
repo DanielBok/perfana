@@ -1,12 +1,28 @@
 import os
 
 import pandas as pd
+import numpy as np
 
-__all__ = ["load_etf", "load_smi"]
+__all__ = ["load_cube", "load_etf", "load_smi"]
 
 
 def _load_file(fn: str):
     return os.path.join(os.path.dirname(__file__), 'data', fn)
+
+
+def load_cube() -> np.ndarray:
+    """
+    Loads a sample Monte Carlo simulation of 9 asset classes.
+
+    The dimension of the cube is 80 * 1000 * 9. The first axis represents the time, the second
+    represents the number of trials (simulations) and the third represents each asset class.
+
+    Returns
+    -------
+    ndarray
+        A data cube of simulated returns
+    """
+    return np.load(_load_file('cube.npy'))
 
 
 def load_etf(date_as_index: bool = True) -> pd.DataFrame:
