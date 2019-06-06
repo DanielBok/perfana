@@ -1,0 +1,44 @@
+Name	Value1	Value2
+"PP average return (GR), 20Y"	0.0211	
+"PP return 25th, 20Y"	0.0055	
+"PP return 75th, 20Y"	0.0385	
+"PP-RP average return (GR), 20Y"	-0.0068	
+"PP-RP return 25th, 20Y"	-0.0108	
+"PP-RP return 75th, 20Y"	-0.0025	
+PP vol	0.1117	
+PP-RP TE	0.0312	
+PP beta to DMEQ	0.77	
+PP correl to DMEQ	0.96	
+PP diversification ratio	1.17	
+PP risk adjusted return	0.19	
+PP-RP IR	-0.22	
+"PP 95% CVaR, 3Y"	-0.2829	
+PP expected loss great than -30%	-0.3673	
+PP prob of loss great than -30%	0.015	
+PP average max drawdown	-0.3199	
+PP tail diversification ratio	1.13	
+"Prob of PP underperform RP, 20Y"	0.863	
+"Prob of PP less than 0, 20Y"	0.198	
+"Prob of PP underperform RP, 10Y"	0.782	
+"Prob of PP less than 0, 10Y"	0.247	
+PP return attribution - DMEQ	0.446	0.009
+PP return attribution - EMEQ	0.229	0.005
+PP return attribution - PE	0.224	0.005
+PP return attribution - RE	0.073	0.002
+PP return attribution - NB	0.023	0
+PP return attribution - EILB	0.005	0
+PP return attribution - CASH	-0.001	0
+PP vol attribution - DMEQ	0.301	0.034
+PP vol attribution - EMEQ	0.443	0.05
+PP vol attribution - PE	0.175	0.02
+PP vol attribution - RE	0.067	0.007
+PP vol attribution - NB	0.007	0.001
+PP vol attribution - EILB	0.006	0.001
+PP vol attribution - CASH	0.001	0
+PP CVaR attribution - DMEQ	0.31	-0.088
+PP CVaR attribution - EMEQ	0.41	-0.116
+PP CVaR attribution - PE	0.171	-0.048
+PP CVaR attribution - RE	0.069	-0.02
+PP CVaR attribution - NB	0.019	-0.005
+PP CVaR attribution - EILB	0.019	-0.006
+PP CVaR attribution - CASH	0.001	0
