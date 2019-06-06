@@ -1,30 +1,11 @@
-from collections import abc
 from datetime import datetime
 from typing import Iterable, Union
 
 import numpy as np
 import pandas as pd
 
-__all__ = ['DateTimes', 'TimeSeriesData', 'Vector', 'cast_to_series']
+__all__ = ['DateTimes', 'TimeSeriesData', 'Vector']
 
 DateTimes = Union[Iterable[str], Iterable[datetime]]
 Vector = Union[Iterable[Union[int, float]], np.ndarray, pd.Series]
 TimeSeriesData = Union[pd.DataFrame, Vector]
-
-
-def cast_to_series(series: Vector, allow_object=False) -> pd.Series:
-    err_msg = "data series should be a univariate vector"
-    if isinstance(series, pd.Series):
-        return series
-    elif isinstance(series, np.ndarray):
-        if series.ndim != 1:
-            raise ValueError(err_msg)
-        return pd.Series(series)
-
-    if isinstance(series, abc.Iterable):
-        raise ValueError(err_msg)
-
-    series = pd.Series(series)
-    if not allow_object and series.dtype == 'object':
-        raise ValueError('Could not cast vector to non-object type data. Check that your data is a numeric list')
-    return series

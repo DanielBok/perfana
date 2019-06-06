@@ -28,6 +28,10 @@ def infer_frequency(data: TimeSeriesData, fail_policy='raise'):
     """
     Infers the frequency (periodicity) of the time series
 
+    Function works by taking the difference between the dates of each successive data point.
+    It then identifies which is the most common difference, whether 2 dates differ by a day,
+    a week or more and use that to determine the periodicity of the data.
+
     Parameters
     ----------
     data:

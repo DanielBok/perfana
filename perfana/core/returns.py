@@ -1,5 +1,6 @@
 from typing import Optional, Union
 
+import numpy as np
 import pandas as pd
 
 from perfana.conversions import to_time_series
@@ -27,7 +28,7 @@ def active_premium(ra: TimeSeriesData,
         The benchmark returns
 
     freq:
-        Frequency of the data. Use one of daily, weekly, monthly, quarterly, semi-annually, yearly
+        Frequency of the data. Use one of monthly, quarterly, semi-annually, yearly
 
     geometric:
         If True, calculates the geometric returns. Otherwise, calculates the arithmetic returns
@@ -125,7 +126,7 @@ def annualized_returns(r: TimeSeriesData,
     Examples
     --------
     >>> from perfana.datasets import load_etf
-    >>> from perfana.core import active_premium
+    >>> from perfana.core import annualized_returns
     # Get returns starting from the date where all etf has data
     >>> etf = load_etf().dropna().pa.to_returns().dropna()
     VBK    0.091609
@@ -143,7 +144,8 @@ def annualized_returns(r: TimeSeriesData,
     scale = freq_to_scale(freq)
 
     if geometric:
-        return (r + 1).prod() ** (scale / len(r)) - 1
+        d = (r + 1).prod()
+        return np.sign(d) * np.abs(d) ** (scale / len(r)) - 1
     else:  # arithmetic mean
         return r.mean() * scale
 
@@ -193,7 +195,7 @@ def excess_returns(ra: TimeSeriesData,
     Examples
     --------
     >>> from perfana.datasets import load_etf
-    >>> from perfana.core import active_premium
+    >>> from perfana.core import excess_returns
     # Get returns starting from the date where all etf has data
     >>> etf = load_etf().dropna().pa.to_returns().dropna()
     >>> excess_returns(etf, etf.VBK)
@@ -249,7 +251,7 @@ def relative_returns(ra: TimeSeriesData,
     Examples
     --------
     >>> from perfana.datasets import load_etf
-    >>> from perfana.core import active_premium
+    >>> from perfana.core import relative_returns
     # Get returns starting from the date where all etf has data
     >>> etf = load_etf().dropna().pa.to_returns().dropna()
     >>> relative_returns(etf.tail(), etf.VBK.tail())
