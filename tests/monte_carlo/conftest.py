@@ -35,3 +35,13 @@ def expected():
 @pytest.fixture
 def weights():
     return np.array([0.25, 0.18, 0.13, 0.11, 0.24, 0.05, 0.04])
+
+
+@pytest.fixture
+def ref_weights():
+    return np.array([0.65, 0.35])
+
+
+@pytest.fixture
+def a_order():
+    return ["DMEQ", "EMEQ", "PE", "RE", "NB", "EILB", "CASH"]
