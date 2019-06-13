@@ -7,9 +7,9 @@ Name	Value1	Value2
 "PP-RP return 75th, 20Y"	-0.0025	
 PP vol	0.1117	
 PP-RP TE	0.0312	
-PP beta to DMEQ	0.77	
-PP correl to DMEQ	0.96	
-PP diversification ratio	1.17	
+PP beta to DMEQ	0.7696
+PP correl to DMEQ	0.9626
+PP diversification ratio	1.1706
 PP risk adjusted return	0.19	
 PP-RP IR	-0.22	
 "PP 95% CVaR, 3Y"	-0.2829	

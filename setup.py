@@ -7,6 +7,7 @@ PACKAGE_NAME = 'perfana'
 cmdclass = versioneer.get_cmdclass()
 
 install_requires = [
+    'copulae >= 0.4',
     'numpy',
     'pandas >=0.23',
     'plotly >=3.9'

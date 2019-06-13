@@ -8,6 +8,11 @@ from perfana.datasets import load_cube
 
 
 @pytest.fixture
+def cube() -> np.ndarray:
+    return load_cube()
+
+
+@pytest.fixture
 def cube_a() -> np.ndarray:
     """Assets"""
     return load_cube()[..., :7]
@@ -45,3 +50,8 @@ def ref_weights():
 @pytest.fixture
 def a_order():
     return ["DMEQ", "EMEQ", "PE", "RE", "NB", "EILB", "CASH"]
+
+
+@pytest.fixture
+def freq():
+    return "quarterly"
