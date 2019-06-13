@@ -10,9 +10,9 @@ def test_volatility_m(cube_a, weights, freq, expected):
     assert_almost_equal(e, vol, 4)
 
 
-def test_tracking_error_m(cube, weights, ref_weights, freq, expected):
+def test_tracking_error_m(cube, weights, bmk_weights, freq, expected):
     e = expected["PP-RP TE"]
-    te = tracking_error_m(cube, weights, ref_weights, freq)
+    te = tracking_error_m(cube, weights, bmk_weights, freq)
 
     assert_almost_equal(e, te, 4)
 

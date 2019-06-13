@@ -12,10 +12,10 @@ def test_annualized_returns_m(cube_a, weights, expected):
     assert_almost_equal(e, gr, 4)
 
 
-def test_annualized_bmk_returns_m(cube_a, weights, cube_b, ref_weights, expected):
+def test_annualized_bmk_returns_m(cube_a, weights, cube_b, bmk_weights, expected):
     """Test the geometric benchmark returns function"""
     e = expected["PP-RP average return (GR), 20Y"]
-    gr = annualized_bmk_returns_m(cube_a, weights, cube_b, ref_weights,
+    gr = annualized_bmk_returns_m(cube_a, weights, cube_b, bmk_weights,
                                   freq='quarterly', geometric=True, rebalance=True)
 
     assert_almost_equal(e, gr, 4)
@@ -30,10 +30,10 @@ def test_annualized_quantile_return_m(cube_a, weights, expected):
     assert_almost_equal(e, qr, 4)
 
 
-def test_annualized_bmk_quantile_returns_m(cube_a, weights, cube_b, ref_weights, expected):
+def test_annualized_bmk_quantile_returns_m(cube_a, weights, cube_b, bmk_weights, expected):
     """Test the annualized benchmark quantile returns function"""
     e = expected["PP-RP return 75th, 20Y"]
-    gr = annualized_bmk_quantile_returns_m(cube_a, weights, cube_b, ref_weights, quantile=0.75,
+    gr = annualized_bmk_quantile_returns_m(cube_a, weights, cube_b, bmk_weights, quantile=0.75,
                                            freq='quarterly', geometric=True, rebalance=True)
 
     assert_almost_equal(e, gr, 4)
