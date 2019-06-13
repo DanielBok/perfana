@@ -10,13 +10,13 @@ PP-RP TE	0.0312
 PP beta to DMEQ	0.7696
 PP correl to DMEQ	0.9626
 PP diversification ratio	1.1706
-PP risk adjusted return	0.19	
-PP-RP IR	-0.22	
+PP risk adjusted return	0.189
+PP-RP IR	-0.2187
 "PP 95% CVaR, 3Y"	-0.2829	
 PP expected loss great than -30%	-0.3673	
 PP prob of loss great than -30%	0.015	
 PP average max drawdown	-0.3199	
-PP tail diversification ratio	1.13	
+PP tail diversification ratio	1.1317
 "Prob of PP underperform RP, 20Y"	0.863	
 "Prob of PP less than 0, 20Y"	0.198	
 "Prob of PP underperform RP, 10Y"	0.782	
