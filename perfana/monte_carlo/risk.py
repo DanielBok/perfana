@@ -2,14 +2,20 @@ import numpy as np
 from copulae.core import cov2corr, is_psd
 
 from perfana.types import Vector
-from ._types import Attribution, Frequency
+from ._types import Attribution, Drawdown, Frequency, RiskPerf, TailLoss
 from ._utility import infer_frequency
 
 __all__ = [
     "beta_m",
     "correlation_m",
+    "cvar_attr",
+    "cvar_m",
+    "cvar_div_ratio",
     "diversification_m",
+    "drawdown_m",
     "portfolio_cov",
+    "risk_perf_bmk",
+    "tail_loss",
     "tracking_error_m",
     "vol_attr",
     "volatility_m",
@@ -120,6 +126,233 @@ def correlation_m(cov_or_data: np.ndarray,
     return cov2corr(cov)[0, 1]
 
 
+def cvar_attr(data: np.ndarray,
+              weights: Vector,
+              alpha=0.95,
+              rebalance=True,
+              invert=True) -> Attribution:
+    """
+    Calculates the CVaR (Expected Shortfall) attribution for each asset class in the portfolio.
+
+    Notes
+    -----
+    From a mathematical point of view, the alpha value (confidence level for calculation)
+    should be taken at the negative extreme of the distribution. However, the default is
+    set to ease the practitioner.
+
+    The return values are defined as follows:
+
+    **marginal**
+        The absolute marginal contribution of the asset class towards the portfolio CVaR.
+        It is essentially the percentage attribution multiplied by the portfolio CVaR.
+
+    **percentage**
+        The percentage contribution of the asset class towards the portfolio CVaR. This number
+        though named in percentage is actually in decimals. Thus 0.01 represents a 1% contribution.
+
+
+    Parameters
+    ----------
+    data
+        Monte carlo simulation data. This must be 3 dimensional with the axis representing time, trial
+        and asset respectively.
+
+    weights
+        Weights of the portfolio. This must be 1 dimensional and must match the dimension of the data's
+        last axis.
+
+    alpha
+        Confidence level for calculation.
+
+    rebalance
+        If True, portfolio is assumed to be rebalanced at every step.
+
+    invert
+        Whether to invert the confidence interval level. See Notes.
+
+    Returns
+    -------
+    Attribution
+        A named tuple of relative and absolute CVaR (expected shortfall) attribution respectively.
+        The absolute attribution is the CVaR of the simulated data over time multiplied by the
+        percentage attribution.
+
+    Examples
+    --------
+    >>> from perfana.datasets import load_cube
+    >>> from perfana.monte_carlo import cvar_attr
+
+    >>> cube = load_cube()[..., :3]
+    >>> weights = [0.33, 0.34, 0.33]
+    >>> attr = cvar_attr(cube, weights, alpha=0.95)
+    >>> attr.marginal
+    array([-0.186001  , -0.35758411, -0.20281477])
+    >>> attr.percentage
+    array([0.24919752, 0.47907847, 0.27172401])
+    >>> attr.marginal is attr[0]
+    True
+    >>> attr.percentage is attr[1]
+    True
+    """
+    data = np.asarray(data)
+    port_cvar = cvar_m(data, weights, alpha, rebalance, invert)
+
+    assert isinstance(alpha, float) and 0 <= alpha <= 1, "alpha must be a float between 0 and 1"
+    alpha = 1 - alpha if invert else alpha
+    t, n, a = data.shape
+    k = int(alpha * n)
+
+    if rebalance:
+        # calculate the CVaR quantile for each time period for the rebalanced portfolio
+        port = data @ weights
+        # calculate alpha quantile value at each time period
+        quantiles = np.quantile(port, alpha, 1)
+
+        cvar_decomp = np.zeros((t, a))  # cvar decomposition at each time period for each asset class
+        for i, q, p, d in zip(range(t), quantiles, port, data):
+            # for each time period, get the mean of the values that are less than the quantile for that
+            # time period along the trials axis. Multiply resulting vector with the weights
+            es = d[p <= q].mean(0) * weights
+            cvar_decomp[i] = es / es.sum()
+
+        attr = cvar_decomp.mean(0)
+    else:
+        data = (data + 1).prod(0) - 1  # portfolio drift
+
+        # sort data according to the portfolio returns then truncate at the alpha value
+        sorted_data = data[np.argsort(data @ weights)][:k]
+
+        # take the mean along each trials axis multiplied by weight
+        es = sorted_data.mean(0) * weights
+        attr = es / es.sum()
+
+    return Attribution(port_cvar * attr, attr)
+
+
+def cvar_div_ratio(data: np.ndarray,
+                   weights: Vector,
+                   alpha=0.95,
+                   rebalance=True,
+                   invert=True) -> float:
+    """
+    Calculates the CVaR (Expected Shortfall) tail diversification ratio of the portfolio
+
+    Notes
+    -----
+    From a mathematical point of view, the alpha value (confidence level for calculation)
+    should be taken at the negative extreme of the distribution. However, the default is
+    set to ease the practitioner.
+
+    Parameters
+    ----------
+    data
+        Monte carlo simulation data. This must be 3 dimensional with the axis representing time, trial
+        and asset respectively.
+
+    weights
+        Weights of the portfolio. This must be 1 dimensional and must match the dimension of the data's
+        last axis.
+
+    alpha
+        Confidence level for calculation.
+
+    rebalance
+        If True, portfolio is assumed to be rebalanced at every step.
+
+    invert
+        Whether to invert the confidence interval level. See Notes.
+
+    Returns
+    -------
+    float
+        CVaR (Expected Shortfall) tail diversification ratio
+
+    Examples
+    --------
+    >>> from perfana.datasets import load_cube
+    >>> from perfana.monte_carlo import cvar_div_ratio
+
+    >>> cube = load_cube()[..., :3]
+    >>> weights = [0.33, 0.34, 0.33]
+    >>> cvar_div_ratio(cube, weights)
+    0.8965390850633622
+    """
+    data = np.asarray(data)
+    port_cvar = cvar_m(data, weights, alpha, rebalance, invert)
+
+    assert isinstance(alpha, float) and 0 <= alpha <= 1, "alpha must be a float between 0 and 1"
+    alpha = 1 - alpha if invert else alpha
+
+    asset_cvar = np.zeros_like(weights)
+    for i in range(len(weights)):
+        d = (data[..., i] + 1).prod(0) - 1
+        q = np.quantile(d, alpha)
+        asset_cvar[i] = d[d <= q].mean()
+
+    return (asset_cvar @ weights) / port_cvar
+
+
+def cvar_m(data: np.ndarray,
+           weights: Vector,
+           alpha=0.95,
+           rebalance=True,
+           invert=True):
+    """
+    Calculates the Conditional Value at Risk (Expected Shortfall) of the portfolio.
+
+    Notes
+    -----
+    From a mathematical point of view, the alpha value (confidence level for calculation)
+    should be taken at the negative extreme of the distribution. However, the default is
+    set to ease the practitioner.
+
+    Parameters
+    ----------
+    data
+        Monte carlo simulation data. This must be 3 dimensional with the axis representing time, trial
+        and asset respectively.
+
+    weights
+        Weights of the portfolio. This must be 1 dimensional and must match the dimension of the data's
+        last axis.
+
+    alpha
+        Confidence level for calculation.
+
+    rebalance
+        If True, portfolio is assumed to be rebalanced at every step.
+
+    invert
+        Whether to invert the confidence interval level. See Notes.
+
+    Returns
+    -------
+    float
+        CVaR (Expected Shortfall) of the portfolio
+
+    Examples
+    --------
+    >>> from perfana.datasets import load_cube
+    >>> from perfana.monte_carlo import cvar_m
+
+    >>> cube = load_cube()[..., :3]
+    >>> weights = [0.33, 0.34, 0.33]
+    >>> cvar_m(cube, weights)
+    -0.7463998716846179
+    """
+
+    data = np.asarray(data)
+    assert isinstance(alpha, float) and 0 <= alpha <= 1, "alpha must be a float between 0 and 1"
+    alpha = 1 - alpha if invert else alpha
+
+    if rebalance:
+        data = (data @ weights + 1).prod(0) - 1
+    else:
+        data = (data + 1).prod(0) @ weights - 1
+
+    return data[data <= np.quantile(data, alpha)].mean()
+
+
 def diversification_m(cov_or_data: np.ndarray,
                       weights: Vector,
                       freq: Frequency) -> float:
@@ -162,6 +395,72 @@ def diversification_m(cov_or_data: np.ndarray,
     return (weights * asset_vol).sum() / vol
 
 
+def drawdown_m(data: np.ndarray,
+               weights: Vector,
+               geometric=True,
+               rebalance=True) -> Drawdown:
+    """
+    Calculates the drawdown statistics
+
+    Parameters
+    ----------
+    data
+        Monte carlo simulation data. This must be 3 dimensional with the axis representing time, trial
+        and asset respectively.
+
+    weights
+        Weights of the portfolio. This must be 1 dimensional and must match the dimension of the data's
+        last axis.
+
+    geometric
+        If True, calculates the geometric mean, otherwise, calculates the arithmetic mean.
+
+    rebalance
+        If True, portfolio is assumed to be rebalanced at every step.
+
+    Returns
+    -------
+    Drawdown
+        A named tuple containing the average maximum drawdown and the drawdown path for each simulation
+        instance.
+
+    Examples
+    --------
+    >>> from perfana.datasets import load_cube
+    >>> from perfana.monte_carlo import drawdown_m
+
+    >>> data = load_cube()[..., :7]
+    >>> weights = [0.25, 0.18, 0.13, 0.11, 0.24, 0.05, 0.04]
+    >>> dd = drawdown_m(data, weights)
+    >>> dd.average
+    -0.3198714473717889
+    >>> dd.paths.shape
+    (80, 1000)
+    """
+    data = np.asarray(data)
+    weights = np.ravel(weights)
+
+    # cumulative returns per asset class
+    if rebalance:
+        if geometric:
+            cum_ret = (data @ weights + 1).cumprod(0)
+        else:
+            cum_ret = (data @ weights).cumsum(0) + 1
+    else:
+        if geometric:
+            cum_ret = ((data + 1).cumprod(0) - 1) @ weights + 1
+        else:
+            cum_ret = data.cumsum(1) @ weights + 1
+
+    # get cumulative maximum along path
+    cum_max = np.maximum.accumulate(np.vstack([np.ones(data.shape[1]), cum_ret]), 0)[1:]
+    # drawdown path formula
+    dd_paths = cum_ret / cum_max - 1
+    average_max_dd = dd_paths.min(0).mean()
+
+    return Drawdown(average_max_dd, dd_paths)
+
+
 def portfolio_cov(data: np.ndarray,
                   freq: Frequency) -> np.ndarray:
     """
@@ -202,6 +501,147 @@ def portfolio_cov(data: np.ndarray,
     # convert to annual returns then calculate the average covariance across time
     ar = (data + 1).reshape(y, freq, n, a).prod(1) - 1
     return np.mean([np.cov(ar[i], rowvar=False) for i in range(y)], 0)
+
+
+def risk_perf_bmk(data: np.ndarray,
+                  weights: Vector,
+                  bmk_weights: Vector,
+                  rebalance=True) -> RiskPerf:
+    """
+    Calculates various risk performance of the portfolio against a benchmark
+
+    The simulated returns cube is used as the data, the benchmark components must be placed after
+    the portfolio components.
+
+    Notes
+    -----
+    The return values are defined as follows:
+
+    **prob_under_performance**
+        Probability that portfolio under performs benchmark portfolio
+
+    **prob_loss**
+        Probability that portfolio suffers a loss (value less than at starting point)
+
+    Parameters
+    ----------
+    data
+        Monte carlo simulation data. This must be 3 dimensional with the axis representing time, trial
+        and asset respectively.
+
+    weights
+        Weights of the portfolio. This must be 1 dimensional and must match the dimension of the data's
+        last axis.
+
+    bmk_weights
+        Weights of the benchmark portfolio.
+
+    rebalance
+        If True, portfolio is assumed to be rebalanced at every step.
+
+    Returns
+    -------
+    RiskPerf
+        A named tuple containing the probability of underperformance and loss
+
+    Examples
+    --------
+    >>> from perfana.datasets import load_cube
+    >>> from perfana.monte_carlo import risk_perf_bmk
+
+    >>> data = load_cube()
+    >>> weights = [0.25, 0.18, 0.13, 0.11, 0.24, 0.05, 0.04]
+    >>> bmk_weights = [0.65, 0.35]
+    >>> risk_measure = risk_perf_bmk(data, weights, bmk_weights)
+    >>> risk_measure.prob_under_performance
+    0.863
+    >>> risk_measure.prob_loss
+    0.198
+    """
+    weights, bmk_weights = np.ravel(weights), np.ravel(bmk_weights)
+    n = len(weights)
+
+    port_data, bmk_data = data[..., :n], data[..., n:]
+    if rebalance:
+        port_ret = ((port_data @ weights) + 1).prod(0) - 1
+        bmk_ret = ((bmk_data @ bmk_weights) + 1).prod(0) - 1
+    else:
+        port_ret = ((port_data + 1).prod(0) - 1) @ weights
+        bmk_ret = ((bmk_data + 1).prod(0) - 1) @ bmk_weights
+
+    prob_under_perf = np.mean(port_ret < bmk_ret)
+    prob_loss = np.mean(port_ret < 0)
+
+    return RiskPerf(prob_under_perf, prob_loss)
+
+
+def tail_loss(data: np.ndarray,
+              weights: Vector,
+              threshold=-0.3,
+              rebalance=True) -> TailLoss:
+    """
+    Calculates the probability and expectation of a tail loss beyond a threshold
+
+    Threshold by default is set at -0.3, which means find the probability that the portfolio loses more than
+    30% of its value and the expected loss.
+
+    Notes
+    -----
+    The return values are defined as follows:
+
+    **prob**
+        Probability of having a tail loss exceeding the threshold
+
+    **expected_loss**
+        Value of the expected loss for the portfolio at the threshold
+
+    Parameters
+    ----------
+    data
+        Monte carlo simulation data. This must be 3 dimensional with the axis representing time, trial
+        and asset respectively.
+
+    weights
+        Weights of the portfolio. This must be 1 dimensional and must match the dimension of the data's
+        last axis.
+
+    threshold
+        Portfolio loss threshold.
+
+    rebalance
+        If True, portfolio is assumed to be rebalanced at every step.
+
+    Returns
+    -------
+    TailLoss
+        A named tuple containing the probability and expected loss of the portfolio exceeding the threshold.
+
+    Examples
+    --------
+    >>> from perfana.datasets import load_cube
+    >>> from perfana.monte_carlo import tail_loss
+
+    >>> data = load_cube()[..., :3]  # first 3 asset classes only
+    >>> weights = [0.33, 0.34, 0.33]
+    >>> loss = tail_loss(data, weights, -0.03)
+    >>> loss.prob
+    0.241
+    >>> loss.expected_loss
+    -0.3978210273894446
+    """
+    data = np.asarray(data)
+    weights = np.ravel(weights)
+
+    if rebalance:
+        port = (data @ weights + 1).prod(0) - 1
+    else:
+        port = ((data + 1).prod(0) - 1) @ weights
+
+    mask = port <= threshold
+    prob = mask.mean()
+    exp = port[mask].mean()
+
+    return TailLoss(prob, exp)
 
 
 def tracking_error_m(cov_or_data: np.ndarray,
@@ -262,6 +702,18 @@ def vol_attr(cov_or_data: np.ndarray,
              freq: Frequency) -> Attribution:
     """
     Derives the volatility attribution given a data cube and weights.
+
+    Notes
+    -----
+    The return values are defined as follows:
+
+    **marginal**
+        The absolute marginal contribution of the asset class towards the portfolio volatility.
+        It is essentially the percentage attribution multiplied by the portfolio volatility.
+
+    **percentage**
+        The percentage contribution of the asset class towards the portfolio volatility. This number
+        though named in percentage is actually in decimals. Thus 0.01 represents a 1% contribution.
 
     Parameters
     ----------
