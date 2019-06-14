@@ -1,0 +1,32 @@
+{% set data = load_setup_py_data() %}
+
+
+package:
+  name: perfana
+  version: {{ data['version' ] }}
+
+source:
+  path: ..
+
+build:
+  noarch: python
+  number: 0
+  string: py{{ CONDA_PY }}
+  script: python setup.py install --single-version-externally-managed --record=record.txt
+
+requirements:
+  host:
+    - python
+    - setuptools
+  run:
+    - python
+    {% for dep in data['install_requires'] %}
+    - {{ dep.lower() }}
+    {% endfor %}
+
+about:
+  home: https://github.com/DanielBok/perfana
+  license: MIT
+  summary: Portfolio Performance Analytics in Python.
+  dev_url: https://github.com/DanielBok/perfana
+  doc_url: https://perfana.rtfd.io

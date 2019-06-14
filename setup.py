@@ -7,16 +7,17 @@ PACKAGE_NAME = 'perfana'
 cmdclass = versioneer.get_cmdclass()
 
 install_requires = [
-    'copulae >= 0.4',
+    'copulae >=0.4',
     'numpy',
     'pandas >=0.23',
-    'plotly >=3.9'
+    'plotly >=3.9',
+    'scipy >=1.2'
 ]
 
 setup(
     name=PACKAGE_NAME,
     license='MIT',
-    version=versioneer.get_version(),
+    version=versioneer.get_version().split('+')[0],
     description='Toolbox for performance and portfolio analytics',
     author='Daniel Bok',
     author_email='daniel.bok@outlook.com',
