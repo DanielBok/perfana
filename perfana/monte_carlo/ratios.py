@@ -1,4 +1,5 @@
 import numpy as np
+from copulae.core import is_psd
 
 from perfana.monte_carlo.returns import annualized_bmk_returns_m, annualized_returns_m
 from perfana.monte_carlo.risk import tracking_error_m, volatility_m
@@ -65,7 +66,6 @@ def sharpe_ratio_m(data: np.ndarray,
 
 def sharpe_ratio_bmk_m(data: np.ndarray,
                        weights: Vector,
-                       bmk: np.ndarray,
                        bmk_weights: Vector,
                        freq: Frequency,
                        cov: np.ndarray = None,
@@ -73,6 +73,8 @@ def sharpe_ratio_bmk_m(data: np.ndarray,
                        rebalance: bool = True):
     """
     Calculates the Sharpe Ratio of the portfolio over the benchmark.
+
+    The benchmark components must be placed after the portfolio components in the simulated returns cube.
 
     Parameters
     ----------
@@ -83,10 +85,6 @@ def sharpe_ratio_bmk_m(data: np.ndarray,
     weights
         Weights of the portfolio. This must be 1 dimensional and must match the dimension of the data's
         last axis.
-
-    bmk
-        Benchmark data. This must also be 3 dimensional like the `data` object with the axis representing
-        time, trial and asset respectively.
 
     bmk_weights
         Weights of the benchmark portfolio.
@@ -116,22 +114,20 @@ def sharpe_ratio_bmk_m(data: np.ndarray,
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import sharpe_ratio_bmk_m
 
-    >>> cube = load_cube()[..., :7]
-    >>> bmk_cube = load_cube()[..., 7:]
+    >>> cube = load_cube()
     >>> weights = [0.25, 0.18, 0.13, 0.11, 0.24, 0.05, 0.04]
     >>> bmk_weights = [0.65, 0.35]
     >>> freq = 'quarterly'
-    >>> sharpe_ratio_bmk_m(cube, weights, bmk_cube, bmk_weights, freq)
+    >>> sharpe_ratio_bmk_m(cube, weights, bmk_weights, freq)
     -0.2186945589389277
     """
-    gr = annualized_bmk_returns_m(data, weights, bmk, bmk_weights, freq, geometric, rebalance)
+    gr = annualized_bmk_returns_m(data, weights, bmk_weights, freq, geometric, rebalance)
 
-    if cov is None:
-        _data = np.concatenate([data, bmk], 2)
-    else:
+    if cov is not None:
         n = len(weights) + len(bmk_weights)
         assert cov.shape == (n, n), "covariance matrix shape incorrect"
-        _data = cov
+        assert is_psd(cov), "covariance matrix is not positive semi-definite"
+        data = cov
 
-    te = tracking_error_m(_data, weights, bmk_weights, freq)
+    te = tracking_error_m(data, weights, bmk_weights, freq)
     return gr / te

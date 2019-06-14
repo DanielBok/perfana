@@ -510,8 +510,7 @@ def risk_perf_bmk(data: np.ndarray,
     """
     Calculates various risk performance of the portfolio against a benchmark
 
-    The simulated returns cube is used as the data, the benchmark components must be placed after
-    the portfolio components.
+    The benchmark components must be placed after the portfolio components in the simulated returns cube.
 
     Notes
     -----

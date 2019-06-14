@@ -10,9 +10,8 @@ def test_sharpe_ratio_m(cube_a, weights, freq, expected):
     assert_almost_equal(e, port_sr, 4)
 
 
-def test_sharpe_ratio_bmk_m(cube_a, weights, cube_b, bmk_weights, freq, expected):
+def test_sharpe_ratio_bmk_m(cube, weights, cube_b, bmk_weights, freq, expected):
     """Tests the risk adjusted return ratio of the portfolio against a benchmark"""
     e = expected["PP-RP IR"]
-    port_vs_bmk_sr = sharpe_ratio_bmk_m(cube_a, weights, cube_b, bmk_weights, freq,
-                                        geometric=True, rebalance=True)
+    port_vs_bmk_sr = sharpe_ratio_bmk_m(cube, weights, bmk_weights, freq, geometric=True, rebalance=True)
     assert_almost_equal(e, port_vs_bmk_sr, 4)
