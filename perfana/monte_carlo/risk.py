@@ -281,12 +281,12 @@ def vol_attr(cov_or_data: np.ndarray,
     -------
     Attribution
         A named tuple of relative and absolute volatility attribution respectively. The absolute attribution
-        is the volatility of the simulated data over time multiplied by the relative attribution.
+        is the volatility of the simulated data over time multiplied by the percentage attribution.
 
     Examples
     --------
     >>> from perfana.datasets import load_cube
-    >>> from perfana.monte_carlo import portfolio_cov, vol_attr
+    >>> from perfana.monte_carlo import vol_attr
 
     >>> data = load_cube()[..., :3]  # first 3 asset classes only
     >>> weights = [0.33, 0.34, 0.33]
@@ -296,6 +296,10 @@ def vol_attr(cov_or_data: np.ndarray,
     array([0.2352, 0.5006, 0.2643])
     >>> attr.percentage.round(4)
     array([0.0445, 0.0947, 0.05  ])
+    >>> attr.marginal is attr[0]
+    True
+    >>> attr.percentage is attr[1]
+    True
     """
     weights = np.ravel(weights)
     cov = _get_covariance_matrix(cov_or_data, freq)
