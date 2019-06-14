@@ -40,8 +40,6 @@ Graph = Union[
     go.Histogram,
     go.Heatmapgl,
     go.Heatmap,
-    go.Funnelarea,
-    go.Funnel,
     go.Contourcarpet,
     go.Contour,
     go.Cone,
