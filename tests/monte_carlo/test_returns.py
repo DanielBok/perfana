@@ -1,3 +1,4 @@
+import pytest
 from numpy.testing import assert_almost_equal
 
 from perfana.monte_carlo import (annualized_bmk_quantile_returns_m, annualized_bmk_returns_m,
@@ -21,19 +22,21 @@ def test_annualized_bmk_returns_m(cube_a, weights, cube_b, bmk_weights, expected
     assert_almost_equal(e, gr, 4)
 
 
-def test_annualized_quantile_return_m(cube_a, weights, expected):
+@pytest.mark.parametrize('quantile', [0.25, 0.75])
+def test_annualized_quantile_return_m(cube_a, weights, expected, quantile):
     """Test the annualized quantile returns function"""
-    e = expected["PP return 75th, 20Y"]
-    qr = annualized_quantile_returns_m(cube_a, weights, quantile=0.75,
+    e = expected[f"PP return {int(quantile * 100)}th, 20Y"]
+    qr = annualized_quantile_returns_m(cube_a, weights, quantile=quantile,
                                        freq='quarterly', geometric=True, rebalance=True)
 
     assert_almost_equal(e, qr, 4)
 
 
-def test_annualized_bmk_quantile_returns_m(cube_a, weights, cube_b, bmk_weights, expected):
+@pytest.mark.parametrize('quantile', [0.25, 0.75])
+def test_annualized_bmk_quantile_returns_m(cube_a, weights, cube_b, bmk_weights, expected, quantile):
     """Test the annualized benchmark quantile returns function"""
-    e = expected["PP-RP return 75th, 20Y"]
-    gr = annualized_bmk_quantile_returns_m(cube_a, weights, cube_b, bmk_weights, quantile=0.75,
+    e = expected[f"PP-RP return {int(quantile * 100)}th, 20Y"]
+    gr = annualized_bmk_quantile_returns_m(cube_a, weights, cube_b, bmk_weights, quantile=quantile,
                                            freq='quarterly', geometric=True, rebalance=True)
 
     assert_almost_equal(e, gr, 4)
