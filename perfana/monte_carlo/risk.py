@@ -638,7 +638,7 @@ def tail_loss(data: np.ndarray,
 
     mask = port <= threshold
     prob = mask.mean()
-    exp = port[mask].mean()
+    exp = (mask * port).mean()
 
     return TailLoss(prob, exp)
 
