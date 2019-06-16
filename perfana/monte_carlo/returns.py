@@ -141,7 +141,6 @@ def annualized_bmk_returns_m(data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import annualized_bmk_returns_m
-
     >>> cube = load_cube()
     >>> weights = [0.25, 0.18, 0.13, 0.11, 0.24, 0.05, 0.04]
     >>> bmk_weights = [0.65, 0.35]
@@ -225,7 +224,6 @@ def annualized_quantile_returns_m(data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import annualized_quantile_returns_m
-
     >>> cube = load_cube()[..., :7]
     >>> weights = [0.25, 0.18, 0.13, 0.11, 0.24, 0.05, 0.04]
     >>> freq = "quarterly"
@@ -316,7 +314,6 @@ def annualized_bmk_quantile_returns_m(data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import annualized_bmk_quantile_returns_m
-
     >>> cube = load_cube()
     >>> weights = [0.25, 0.18, 0.13, 0.11, 0.24, 0.05, 0.04]
     >>> bmk_weights = [0.65, 0.35]
@@ -360,11 +357,11 @@ def returns_attr(data: np.ndarray,
     -----
     The return values are defined as follows:
 
-    **marginal**
+    - **marginal**
         The absolute marginal contribution of the asset class towards the portfolio returns.
         It is essentially the percentage attribution multiplied by the portfolio returns.
 
-    **percentage**
+    - **percentage**
         The percentage contribution of the asset class towards the portfolio returns. This number
         though named in percentage is actually in decimals. Thus 0.01 represents a 1% contribution.
 
@@ -399,7 +396,6 @@ def returns_attr(data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import returns_attr
-
     >>> cube = load_cube()[..., :3]
     >>> weights = [0.33, 0.34, 0.33]
     >>> freq = "quarterly"

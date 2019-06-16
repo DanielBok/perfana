@@ -21,19 +21,19 @@ def active_premium(ra: TimeSeriesData,
 
     Parameters
     ----------
-    ra:
+    ra
         The assets returns vector or matrix
 
-    rb:
+    rb
         The benchmark returns
 
-    freq:
+    freq
         Frequency of the data. Use one of monthly, quarterly, semi-annually, yearly
 
-    geometric:
+    geometric
         If True, calculates the geometric returns. Otherwise, calculates the arithmetic returns
 
-    prefixes:
+    prefixes
         Prefix to apply to overlapping column names in the left and right side, respectively. This is also applied
         when the column name is an integer (i.e. 0 -> AST_0). It is the default name of the Series data if there
         are no name to the Series
@@ -55,7 +55,6 @@ def active_premium(ra: TimeSeriesData,
     BND  0.055385  0.000000  0.044979 -0.008554
     VTI  0.010407 -0.044979  0.000000 -0.053532
     VWO  0.063939  0.008554  0.053532  0.000000
-
     >>> active_premium(etf.VBK, etf.BND)
               VBK
     BND  0.055385
@@ -97,25 +96,25 @@ def annualized_returns(r: TimeSeriesData,
     periods in a year, and taking the root to the number of total observations:
 
     .. math::
-        \prod_i^N(1 + r_i)^{scale/N} - 1
+        \prod_i^N(1 + r_i)^{s/N} - 1
 
     where scale is the number of observations in a year, and N is the total number of observations.
 
     For simple returns (geometric=FALSE), the formula is:
 
     .. math::
-        \frac{scale}{N} \sum^N_i r_i
+        \frac{s}{N} \sum^N_i r_i
 
 
     Parameters
     ----------
-    r:
+    r
         Numeric returns series or data frame
 
-    freq:
+    freq
         Frequency of the data. Use one of daily, weekly, monthly, quarterly, semi-annually, yearly
 
-    geometric:
+    geometric
         If True, calculates the geometric returns. Otherwise, calculates the arithmetic returns
 
     Returns
@@ -176,12 +175,12 @@ def excess_returns(ra: TimeSeriesData,
     ra
         The assets returns vector or matrix
 
-    rb:
+    rb
         The benchmark returns. If this is a vector and the asset returns is a matrix, then all assets returns (columns)
         will be compared against this single benchmark. Otherwise, if this is a matrix, then assets will be compared
         to each individual benchmark (i.e. column for column)
 
-    freq:
+    freq
         Frequency of the data. Use one of [daily, weekly, monthly, quarterly, semi-annually, yearly]
 
     geometric
@@ -204,7 +203,6 @@ def excess_returns(ra: TimeSeriesData,
     VTI   -0.009533
     VWO   -0.058573
     dtype: float64
-
     """
     ra = to_time_series(ra).dropna()
     rb = to_time_series(rb).dropna()
@@ -231,10 +229,10 @@ def relative_returns(ra: TimeSeriesData,
 
     Parameters
     ----------
-    ra:
+    ra
         The assets returns vector or matrix
 
-    rb:
+    rb
         The benchmark returns
 
     prefixes:

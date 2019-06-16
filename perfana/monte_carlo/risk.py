@@ -62,7 +62,6 @@ def beta_m(cov_or_data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import portfolio_cov, beta_m
-
     >>> data = load_cube()[..., :3]  # first 3 asset classes only
     >>> weights = [0.33, 0.34, 0.33]
     >>> freq = 'quarterly'
@@ -114,7 +113,6 @@ def correlation_m(cov_or_data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import portfolio_cov, correlation_m
-
     >>> data = load_cube()[..., :3]  # first 3 asset classes only
     >>> weights = [0.33, 0.34, 0.33]
     >>> freq = 'quarterly'
@@ -142,11 +140,11 @@ def cvar_attr(data: np.ndarray,
 
     The return values are defined as follows:
 
-    **marginal**
+    - **marginal**
         The absolute marginal contribution of the asset class towards the portfolio CVaR.
         It is essentially the percentage attribution multiplied by the portfolio CVaR.
 
-    **percentage**
+    - **percentage**
         The percentage contribution of the asset class towards the portfolio CVaR. This number
         though named in percentage is actually in decimals. Thus 0.01 represents a 1% contribution.
 
@@ -181,7 +179,6 @@ def cvar_attr(data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import cvar_attr
-
     >>> cube = load_cube()[..., :3]
     >>> weights = [0.33, 0.34, 0.33]
     >>> attr = cvar_attr(cube, weights, alpha=0.95)
@@ -271,7 +268,6 @@ def cvar_div_ratio(data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import cvar_div_ratio
-
     >>> cube = load_cube()[..., :3]
     >>> weights = [0.33, 0.34, 0.33]
     >>> cvar_div_ratio(cube, weights)
@@ -334,7 +330,6 @@ def cvar_m(data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import cvar_m
-
     >>> cube = load_cube()[..., :3]
     >>> weights = [0.33, 0.34, 0.33]
     >>> cvar_m(cube, weights)
@@ -382,7 +377,6 @@ def diversification_m(cov_or_data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import portfolio_cov, diversification_m
-
     >>> data = load_cube()[..., :7]  # first 7 asset classes
     >>> weights = [0.25, 0.18, 0.13, 0.11, 0.24, 0.05, 0.04]
     >>> freq = 'quarterly'
@@ -428,7 +422,6 @@ def drawdown_m(data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import drawdown_m
-
     >>> data = load_cube()[..., :7]
     >>> weights = [0.25, 0.18, 0.13, 0.11, 0.24, 0.05, 0.04]
     >>> dd = drawdown_m(data, weights)
@@ -486,7 +479,6 @@ def portfolio_cov(data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import portfolio_cov
-
     >>> data = load_cube()[..., :3]  # first 3 asset classes only
     >>> portfolio_cov(data, 'quarterly').round(4)
     array([[0.0195, 0.0356, 0.021 ],
@@ -516,10 +508,10 @@ def risk_perf_bmk(data: np.ndarray,
     -----
     The return values are defined as follows:
 
-    **prob_under_performance**
+    - **prob_under_performance**
         Probability that portfolio under performs benchmark portfolio
 
-    **prob_loss**
+    - **prob_loss**
         Probability that portfolio suffers a loss (value less than at starting point)
 
     Parameters
@@ -547,7 +539,6 @@ def risk_perf_bmk(data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import risk_perf_bmk
-
     >>> data = load_cube()
     >>> weights = [0.25, 0.18, 0.13, 0.11, 0.24, 0.05, 0.04]
     >>> bmk_weights = [0.65, 0.35]
@@ -568,8 +559,8 @@ def risk_perf_bmk(data: np.ndarray,
         port_ret = ((port_data + 1).prod(0) - 1) @ weights
         bmk_ret = ((bmk_data + 1).prod(0) - 1) @ bmk_weights
 
-    prob_under_perf = np.mean(port_ret < bmk_ret)
-    prob_loss = np.mean(port_ret < 0)
+    prob_under_perf = (port_ret < bmk_ret).mean()
+    prob_loss = (port_ret < 0).mean()
 
     return RiskPerf(prob_under_perf, prob_loss)
 
@@ -588,10 +579,10 @@ def tail_loss(data: np.ndarray,
     -----
     The return values are defined as follows:
 
-    **prob**
+    - **prob**
         Probability of having a tail loss exceeding the threshold
 
-    **expected_loss**
+    - **expected_loss**
         Value of the expected loss for the portfolio at the threshold
 
     Parameters
@@ -619,7 +610,6 @@ def tail_loss(data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import tail_loss
-
     >>> data = load_cube()[..., :3]  # first 3 asset classes only
     >>> weights = [0.33, 0.34, 0.33]
     >>> loss = tail_loss(data, weights, -0.03)
@@ -680,7 +670,6 @@ def tracking_error_m(cov_or_data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import portfolio_cov, tracking_error_m
-
     >>> data = load_cube()
     >>> weights = [0.25, 0.18, 0.13, 0.11, 0.24, 0.05, 0.04]
     >>> bmk_weights = [0.65, 0.35]
@@ -738,7 +727,6 @@ def vol_attr(cov_or_data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import vol_attr
-
     >>> data = load_cube()[..., :3]  # first 3 asset classes only
     >>> weights = [0.33, 0.34, 0.33]
     >>> freq = 'quarterly'
@@ -794,16 +782,13 @@ def volatility_m(cov_or_data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import portfolio_cov, volatility_m
-
     >>> data = load_cube()[..., :3]  # first 3 asset classes only
     >>> weights = [0.33, 0.34, 0.33]
     >>> freq = 'quarterly'
     >>> cov_mat = portfolio_cov(data, freq).round(4)  # empirical covariance matrix
-
     >>> # Using covariance matrix
     >>> volatility_m(cov_mat, weights)
     0.1891091219375734
-
     >>> # Using the simulated returns data cube
     >>> volatility_m(data, weights, freq)
     0.1891091219375734

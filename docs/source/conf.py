@@ -22,8 +22,14 @@ copyright = '2019, Daniel'
 author = 'Daniel'
 
 # The full version, including alpha/beta/rc tags
-version = '0.0'
-release = '0.0.1'
+try:
+    import perfana
+
+    revision = perfana.__version__
+    version = revision.split('+')[0]
+except ModuleNotFoundError:
+    version = '0.0.0'
+    revision = '0.0.0'
 
 # -- General configuration ---------------------------------------------------
 

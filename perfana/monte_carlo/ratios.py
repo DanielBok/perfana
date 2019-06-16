@@ -52,7 +52,6 @@ def sharpe_ratio_m(data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import sharpe_ratio_m
-
     >>> cube = load_cube()[..., :3]
     >>> weights = [0.33, 0.34, 0.33]
     >>> freq = 'quarterly'
@@ -113,7 +112,6 @@ def sharpe_ratio_bmk_m(data: np.ndarray,
     --------
     >>> from perfana.datasets import load_cube
     >>> from perfana.monte_carlo import sharpe_ratio_bmk_m
-
     >>> cube = load_cube()
     >>> weights = [0.25, 0.18, 0.13, 0.11, 0.24, 0.05, 0.04]
     >>> bmk_weights = [0.65, 0.35]
