@@ -2,7 +2,8 @@ import pytest
 from numpy.testing import assert_almost_equal
 
 from perfana.monte_carlo import (beta_m, correlation_m, cvar_attr, cvar_div_ratio, cvar_m, diversification_m,
-                                 drawdown_m, risk_perf_bmk, tail_loss, tracking_error_m, vol_attr, volatility_m)
+                                 drawdown_m, prob_loss, prob_under_perf, tail_loss, tracking_error_m, vol_attr,
+                                 volatility_m)
 
 
 @pytest.fixture
@@ -65,16 +66,25 @@ def test_diversification(cube_a, weights, expected):
 
 
 @pytest.mark.parametrize("year", [10, 20])
-def test_risk_perf_bmk(cube, weights, bmk_weights, year, expected):
-    e_prob_under_perf = expected[f"Prob of PP underperform RP, {year}Y"]
-    e_prob_loss = expected[f"Prob of PP less than 0, {year}Y"]
+@pytest.mark.parametrize("terminal", [True, False])
+def test_prob_under_perf(cube, weights, bmk_weights, year, terminal, expected):
+    e = expected[f"Prob of PP underperform RP, {year}Y"]
 
     data = cube[:4 * year]
-    prob_under_perf, prob_loss = risk_perf_bmk(data, weights, bmk_weights)
+    prob = prob_under_perf(data, weights, bmk_weights, terminal=terminal)
 
-    assert_almost_equal([prob_under_perf, prob_loss],
-                        [e_prob_under_perf, e_prob_loss],
-                        4)
+    assert_almost_equal(prob, e, 4)
+
+
+@pytest.mark.parametrize("year", [10, 20])
+@pytest.mark.parametrize("terminal", [True, False])
+def test_prob_loss(cube, weights, year, terminal, expected):
+    e = expected[f"Prob of PP less than 0, {year}Y"]
+
+    data = cube[:4 * year]
+    prob = prob_loss(data, weights, terminal=terminal)
+
+    assert_almost_equal(prob, e, 4)
 
 
 def test_tail_loss(cvar_cube, weights, freq, expected):

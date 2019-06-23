@@ -11,7 +11,8 @@ Risk
     diversification_m
     drawdown_m
     portfolio_cov
-    risk_perf_bmk
+    prob_loss
+    prob_under_perf
     tail_loss
     tracking_error_m
     vol_attr

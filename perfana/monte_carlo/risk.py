@@ -2,7 +2,7 @@ import numpy as np
 from copulae.core import cov2corr, is_psd
 
 from perfana.types import Vector
-from ._types import Attribution, Drawdown, Frequency, RiskPerf, TailLoss
+from ._types import Attribution, Drawdown, Frequency, TailLoss
 from ._utility import infer_frequency
 
 __all__ = [
@@ -14,7 +14,8 @@ __all__ = [
     "diversification_m",
     "drawdown_m",
     "portfolio_cov",
-    "risk_perf_bmk",
+    "prob_loss",
+    "prob_under_perf",
     "tail_loss",
     "tracking_error_m",
     "vol_attr",
@@ -495,24 +496,69 @@ def portfolio_cov(data: np.ndarray,
     return np.mean([np.cov(ar[i], rowvar=False) for i in range(y)], 0)
 
 
-def risk_perf_bmk(data: np.ndarray,
-                  weights: Vector,
-                  bmk_weights: Vector,
-                  rebalance=True) -> RiskPerf:
+def prob_loss(data: np.ndarray,
+              weights: Vector,
+              rebalance=True,
+              terminal=False) -> float:
     """
-    Calculates various risk performance of the portfolio against a benchmark
+    Calculates the probability of the portfolio suffering a loss。
 
-    The benchmark components must be placed after the portfolio components in the simulated returns cube.
+    Parameters
+    ----------
+    data
+        Monte carlo simulation data. This must be 3 dimensional with the axis representing time, trial
+        and asset respectively.
 
-    Notes
-    -----
-    The return values are defined as follows:
+    weights
+        Weights of the portfolio. This must be 1 dimensional and must match the dimension of the data's
+        last axis.
 
-    - **prob_under_performance**
-        Probability that portfolio under performs benchmark portfolio
+    rebalance
+        If True, portfolio is assumed to be rebalanced at every step.
 
-    - **prob_loss**
-        Probability that portfolio suffers a loss (value less than at starting point)
+    terminal
+        If True, this only compares the probability of a loss at the last stage. If False (default),
+        the calculation will take into account if the portfolio was "ruined" and count it as a loss
+        even though the terminal value is positive.
+
+    Returns
+    -------
+    float
+        A named tuple containing the probability of underperformance and loss
+
+    Examples
+    --------
+    >>> from perfana.datasets import load_cube
+    >>> from perfana.monte_carlo import prob_loss
+    >>> data = load_cube()
+    >>> weights = [0.25, 0.18, 0.13, 0.11, 0.24, 0.05, 0.04]
+    >>> prob_loss(data, weights)
+    0.198
+    """
+    weights = np.ravel(weights)
+    n = len(weights)
+
+    port_data = data[..., :n]
+    if rebalance:
+        port_cum_ret = (port_data @ weights + 1).cumprod(0) - 1
+    else:
+        port_cum_ret = ((port_data + 1).cumprod(0) - 1) @ weights
+
+    loss = np.asarray(port_cum_ret < 0)[-1]
+
+    if terminal:
+        return loss.mean()
+    else:
+        return ((port_cum_ret < -1).any(0) | loss).mean()
+
+
+def prob_under_perf(data: np.ndarray,
+                    weights: Vector,
+                    bmk_weights: Vector,
+                    rebalance=True,
+                    terminal=False) -> float:
+    """
+    Calculates the probability of the portfolio underperforming the benchmark at the terminal state
 
     Parameters
     ----------
@@ -530,39 +576,56 @@ def risk_perf_bmk(data: np.ndarray,
     rebalance
         If True, portfolio is assumed to be rebalanced at every step.
 
+    terminal
+        If True, this only compares the probability of underperformance at the last stage.
+        If False (default), the calculation will take into account if the portfolio was "ruined"
+        and count it as an underperformance against the benchmark even though the terminal value
+        is higher than the benchmark. If both portfolios are "ruined", then it underperforms if
+        it is ruined earlier.
+
     Returns
     -------
-    RiskPerf
+    float
         A named tuple containing the probability of underperformance and loss
 
     Examples
     --------
     >>> from perfana.datasets import load_cube
-    >>> from perfana.monte_carlo import risk_perf_bmk
+    >>> from perfana.monte_carlo import prob_under_perf
     >>> data = load_cube()
     >>> weights = [0.25, 0.18, 0.13, 0.11, 0.24, 0.05, 0.04]
     >>> bmk_weights = [0.65, 0.35]
-    >>> risk_measure = risk_perf_bmk(data, weights, bmk_weights)
-    >>> risk_measure.prob_under_performance
+    >>> prob_under_perf(data, weights, bmk_weights)
     0.863
-    >>> risk_measure.prob_loss
-    0.198
     """
     weights, bmk_weights = np.ravel(weights), np.ravel(bmk_weights)
     n = len(weights)
 
     port_data, bmk_data = data[..., :n], data[..., n:]
+
     if rebalance:
-        port_ret = ((port_data @ weights) + 1).prod(0) - 1
-        bmk_ret = ((bmk_data @ bmk_weights) + 1).prod(0) - 1
+        port_cum_ret = (port_data @ weights + 1).cumprod(0) - 1
+        bmk_cum_ret = (bmk_data @ bmk_weights + 1).cumprod(0) - 1
     else:
-        port_ret = ((port_data + 1).prod(0) - 1) @ weights
-        bmk_ret = ((bmk_data + 1).prod(0) - 1) @ bmk_weights
+        port_cum_ret = ((port_data + 1).cumprod(0) - 1) @ weights
+        bmk_cum_ret = ((bmk_data + 1).cumprod(0) - 1) @ bmk_weights
 
-    prob_under_perf = (port_ret < bmk_ret).mean()
-    prob_loss = (port_ret < 0).mean()
+    under_perf = np.asarray(port_cum_ret[-1] < bmk_cum_ret[-1])  # wrapped for autocomplete
+    if terminal:
+        return under_perf.mean()
 
-    return RiskPerf(prob_under_perf, prob_loss)
+    m = data.shape[1]
+    for i, prow, brow in zip(range(m), port_cum_ret.T, bmk_cum_ret.T):
+        for p, b in zip(prow, brow):
+            if b <= -1:
+                # can ignore the fact that p <= -1, cause there would be no underperformance either way
+                under_perf[i] = False
+                break
+            elif p <= -1:
+                under_perf[i] = True
+                break
+
+    return under_perf.mean()
 
 
 def tail_loss(data: np.ndarray,
@@ -612,7 +675,7 @@ def tail_loss(data: np.ndarray,
     >>> from perfana.monte_carlo import tail_loss
     >>> data = load_cube()[..., :3]  # first 3 asset classes only
     >>> weights = [0.33, 0.34, 0.33]
-    >>> loss = tail_loss(data, weights, -0.03)
+    >>> loss = tail_loss(data, weights, -0.3)
     >>> loss.prob
     0.241
     >>> loss.expected_loss
@@ -628,7 +691,7 @@ def tail_loss(data: np.ndarray,
 
     mask = port <= threshold
     prob = mask.mean()
-    exp = (mask * port).mean()
+    exp = (mask * port).sum() / sum(mask)
 
     return TailLoss(prob, exp)
 

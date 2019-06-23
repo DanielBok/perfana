@@ -1,4 +1,4 @@
 Risk Performance Benchmark
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
-.. autofunction:: perfana.monte_carlo.risk.risk_perf_bmk
+.. autofunction:: perfana.monte_carlo.risk.prob_loss

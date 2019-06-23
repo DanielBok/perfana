@@ -2,7 +2,7 @@ from typing import NamedTuple, Union
 
 import numpy as np
 
-__all__ = ["Attribution", "Drawdown", "Frequency", "RiskPerf", "TailLoss"]
+__all__ = ["Attribution", "Drawdown", "Frequency", "TailLoss"]
 
 Attribution = NamedTuple("Attribution", [
     ("marginal", np.ndarray),
@@ -15,11 +15,6 @@ Drawdown = NamedTuple("Drawdown", [
 ])
 
 Frequency = Union[str, int]
-
-RiskPerf = NamedTuple("RiskPerformance", [
-    ("prob_under_performance", float),
-    ("prob_loss", float),
-])
 
 TailLoss = NamedTuple("TailLoss", [
     ("prob", float),
