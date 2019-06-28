@@ -29,9 +29,8 @@ def annualized_returns_m(data: np.ndarray,
 
     .. math::
 
-        y = M / s
-
-        \frac{1}{N}\sum^N_i [\prod_j^T(1 + \sum^A_k (r_{ijk} \cdot w_k))]^{\frac{1}{y}} - 1
+        &y = M / s \\
+        &\frac{1}{N}\sum^N_i \left[\prod_j^T \left(1 + \sum^A_k (r_{ijk} \cdot w_k \right) \right]^{\frac{1}{y}} - 1
 
     where `s` is the number of observations in a year, and `M` is the total number of observations, `N` is
     the number of trials in the simulation, `T` is the number of trials in the simulation and `A` is the
@@ -41,7 +40,7 @@ def annualized_returns_m(data: np.ndarray,
 
     .. math::
 
-        \frac{\text{scale}}{NM} [\sum^N_i \sum^T_j \sum^A_k (r_{ijk} \cdot w_k)]
+        \frac{s}{NM} \left[\sum^N_i \sum^T_j \sum^A_k (r_{ijk} \cdot w_k) \right]
 
     Parameters
     ----------

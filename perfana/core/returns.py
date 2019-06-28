@@ -96,9 +96,9 @@ def annualized_returns(r: TimeSeriesData,
     periods in a year, and taking the root to the number of total observations:
 
     .. math::
-        \prod_i^N(1 + r_i)^{s/N} - 1
+        \prod_i^N(1 + r_i)^{\frac{s}{N}} - 1
 
-    where scale is the number of observations in a year, and N is the total number of observations.
+    where :math:`s` is the number of observations in a year, and :math:`N` is the total number of observations.
 
     For simple returns (geometric=FALSE), the formula is:
 
@@ -160,12 +160,12 @@ def excess_returns(ra: TimeSeriesData,
     `annualized_returns()` for more details. The geometric returns formula is:
 
     .. math::
-        r_g = (ra - rb) / (1 + rb)
+        r_g = \frac{r_a - r_b}{1 + r_b}
 
     The arithmetic excess returns formula is:
 
     .. math::
-        r_g = ra - rb
+        r_g = r_a - r_b
 
     Returns calculation will be truncated by the one with the shorter length. Also, annualized returns are calculated
     by the geometric annualized returns in both cases
