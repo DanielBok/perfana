@@ -7,3 +7,4 @@ Monte Carlo API applies to a series of methods that apply to a 3 dimensional dat
 
     Returns <returns/index>
     Risk <risk/index>
+    Sensitivity <sensitivity/index>
