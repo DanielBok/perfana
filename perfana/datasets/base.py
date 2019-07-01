@@ -1,9 +1,9 @@
 import os
 
-import pandas as pd
 import numpy as np
+import pandas as pd
 
-__all__ = ["load_cube", "load_etf", "load_smi"]
+__all__ = ["load_cube", "load_etf", "load_hist", "load_smi"]
 
 
 def _load_file(fn: str):
@@ -51,6 +51,32 @@ def load_etf(date_as_index: bool = True) -> pd.DataFrame:
     for c in 'VBK', 'BND':
         df[c] = pd.to_numeric(df[c].str.strip())
 
+    return df
+
+
+def load_hist(date_as_index: bool = True) -> pd.DataFrame:
+    """
+    Dataset containing 20-years returns data from different asset classes spanning from 1988 to 2019.
+
+    Parameters
+    ----------
+    date_as_index:
+        If True, sets the first column as the index of the DataFrame
+
+    Returns
+    -------
+    DataFrame
+        A data frame containing the prices of 4 ETF
+    """
+    fp = _load_file('hist.csv')
+
+    if date_as_index:
+        df = pd.read_csv(fp, index_col=0, parse_dates=[0])
+        df.index.name = df.index.name.strip()
+    else:
+        df = pd.read_csv(fp, parse_dates=[0])
+
+    df.columns = df.columns.str.strip()
     return df
 
 
