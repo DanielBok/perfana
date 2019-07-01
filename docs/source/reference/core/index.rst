@@ -6,3 +6,4 @@ Core API applies to a series of methods that apply to a pandas DataFrame or Seri
 .. toctree::
 
     Returns <returns/index>
+    Risk <risk/index>

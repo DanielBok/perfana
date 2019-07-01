@@ -46,6 +46,9 @@ def drawdown(data: TimeSeriesData, weights: Vector = None, geometric=True, rebal
     -0.4007984968456346
     >>> drawdown(hist.iloc[:, 0]).min()
     -0.5491340502573534
+
+    .. plot:: plots/core_drawdown.py
+        :include-source:
     """
     data = to_time_series(data)
     weights = np.ravel(weights)
