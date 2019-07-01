@@ -1,8 +1,10 @@
+import numpy as np
 import pytest
 from numpy.testing import assert_almost_equal
 
 from perfana.monte_carlo import (annualized_bmk_quantile_returns_m, annualized_bmk_returns_m,
-                                 annualized_quantile_returns_m, annualized_returns_m, returns_attr)
+                                 annualized_quantile_returns_m, annualized_returns_m, returns_attr,
+                                 returns_distribution, returns_path)
 
 
 def test_annualized_returns_m(cube_a, weights, expected):
@@ -50,3 +52,17 @@ def test_returns_attr(cube_a, weights, expected, a_order):
 
     assert_almost_equal(e_p, percentage, 4)
     assert_almost_equal(e_m, marginal, 4)
+
+
+@pytest.mark.parametrize("rebalance", [True, False])
+def test_returns_path(cube_a, weights, rebalance):
+    t, n, _ = cube_a.shape
+
+    rd = np.sort(returns_distribution(cube_a, weights, annualize=False, rebalance=rebalance))
+    assert returns_path(cube_a, weights, rebalance).shape == (t + 1, n)
+
+    q25 = rd[int(0.25 * n - 1)]
+    q75 = rd[int(0.75 * n - 1)]
+
+    assert_almost_equal(returns_path(cube_a, weights, rebalance, 0.25)[-1], q25)
+    assert_almost_equal(returns_path(cube_a, weights, rebalance, [0.25, 0.75])[-1], [q25, q75])

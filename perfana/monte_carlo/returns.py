@@ -1,8 +1,8 @@
-from typing import Iterable, Union
+from typing import Iterable, Optional, Union
 
 import numpy as np
 
-from perfana.types import Vector
+from perfana.types import Scalar, Vector, is_iterable
 from perfana.utils import lru_cache_ext
 from ._types import Attribution, Frequency
 from ._utility import infer_frequency
@@ -14,6 +14,7 @@ __all__ = [
     "annualized_bmk_quantile_returns_m",
     "returns_attr",
     "returns_distribution",
+    "returns_path",
 ]
 
 
@@ -403,7 +404,7 @@ def returns_attr(data: np.ndarray,
 @lru_cache_ext
 def returns_distribution(data: np.ndarray,
                          weights: Vector,
-                         freq: Frequency,
+                         freq: Optional[Frequency] = None,
                          annualize=True,
                          geometric: bool = True,
                          rebalance: bool = True) -> np.ndarray:
@@ -423,7 +424,7 @@ def returns_distribution(data: np.ndarray,
     freq
         Frequency of the data. Can either be a string ('week', 'month', 'quarter', 'semi-annual', 'year') or
         an integer specifying the number of units per year. Week: 52, Month: 12, Quarter: 4, Semi-annual: 6,
-        Year: 1.
+        Year: 1. If :code:`annualize` is False, :code:`freq` can be ignored.
 
     annualize
         If true, the returns distribution values are annualized
@@ -449,13 +450,17 @@ def returns_distribution(data: np.ndarray,
     >>> returns_distribution(cube, weights, freq).shape
     (1000,)
     """
-    freq = infer_frequency(freq)
     w = np.ravel(weights)  # force weights to be a 1D vector
-    y = len(data) / freq  # number of years
+
+    if annualize:
+        freq = infer_frequency(freq)
+        y = len(data) / freq  # number of years
+    else:
+        y = None
 
     if rebalance:
         if geometric:
-            d = ((data @ w) + 1).prod(0)
+            d = (data @ w + 1).prod(0)
             if annualize:
                 d = np.sign(d) * np.abs(d) ** (1 / y) - 1
             else:
@@ -478,3 +483,81 @@ def returns_distribution(data: np.ndarray,
                 d = d * freq
 
     return d
+
+
+def returns_path(data: np.ndarray,
+                 weights: Vector,
+                 rebalance: bool = True,
+                 quantile: Union[Scalar, Vector] = None) -> np.ndarray:
+    r"""
+    Returns a matrix of the returns path of the portfolio.
+
+    The first axis represents the time and the second axis represents the trials.
+
+    If the :code:`quantile` argument is specified, the specific quantile will be returned.
+    The quantile is determined by the terminal value. Thus if selecting the 75th percentile,
+    the path returned is the path that the 75th percentile took over its course. If the
+    :code:`quantile` argument is not specified, it returns all the paths.
+
+    Parameters
+    ----------
+    data
+        Monte carlo simulation data. This must be 3 dimensional with the axis representing time, trial
+        and asset respectively.
+
+    weights
+        Weights of the portfolio. This must be 1 dimensional and must match the dimension of the data's
+        last axis.
+
+    rebalance
+        If True, portfolio is assumed to be rebalanced at every step.
+
+    quantile
+        Quantile or sequence of quantiles to compute, which must be between 0 and 1 inclusive
+
+    Returns
+    -------
+    ndarray
+        The returns path for the portfolio
+
+    Examples
+    --------
+    >>> from perfana.datasets import load_cube
+    >>> from perfana.monte_carlo import returns_path
+    >>> cube = load_cube()[..., :3]
+    >>> weights = [0.33, 0.34, 0.33]
+    >>> returns_path(cube, weights).shape
+    (81, 1000)
+    >>> returns_path(cube, weights, quantile=0.75).shape  # 75th quantile
+    (81, )
+    >>> returns_path(cube, weights, quantile=[0.25, 0.5, 0.75]).shape  # 25th, 50th and 75th quantile
+    (81, 3)
+    """
+    w = np.ravel(weights)  # force weights to be a 1D vector
+
+    # add zeros to the start
+    _, n, a = data.shape
+    data = np.append(np.zeros([1, n, a]), data, 0)
+
+    if rebalance:
+        d = (data @ w + 1).cumprod(0) - 1
+    else:
+        d = (data + 1).cumprod(0) @ w - 1
+
+    terminal = d[-1]
+    if quantile is not None:
+        if not is_iterable(quantile):
+            quantile = [quantile]
+
+        quantile = np.asarray(quantile)
+        assert np.alltrue([0 <= quantile, quantile <= 1]), "quantile values must be between 0 and 1"
+
+        # quantile indices, minus one because python is 0-indexed
+        q = np.maximum(np.round(quantile * n).astype(int) - 1, 0)
+
+        indices = np.argsort(terminal)
+        # reorder path array by terminal order indices then select the indices desired
+        return np.squeeze(d[:, indices][:, q])
+
+    else:
+        return d
