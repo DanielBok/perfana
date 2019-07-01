@@ -8,9 +8,9 @@ cmdclass = versioneer.get_cmdclass()
 
 install_requires = [
     'copulae >=0.4',
+    'matplotlib',
     'numpy',
     'pandas >=0.23',
-    'plotly >=3.9',
     'scipy >=1.2'
 ]
 

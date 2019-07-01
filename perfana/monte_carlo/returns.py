@@ -532,6 +532,9 @@ def returns_path(data: np.ndarray,
     (81, )
     >>> returns_path(cube, weights, quantile=[0.25, 0.5, 0.75]).shape  # 25th, 50th and 75th quantile
     (81, 3)
+
+    .. plot:: plots/returns_path.py
+        :include-source:
     """
     w = np.ravel(weights)  # force weights to be a 1D vector
 
