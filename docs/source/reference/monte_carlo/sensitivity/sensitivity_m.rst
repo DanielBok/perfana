@@ -1,4 +1,4 @@
-Sensitivity of Portfolios to Shocks
+Sensitivity of Portfolio to Shocks
 ^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^^
 
 .. autofunction:: perfana.monte_carlo.sensitivity.sensitivity_m
