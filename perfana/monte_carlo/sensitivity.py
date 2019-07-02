@@ -3,6 +3,7 @@ from typing import List
 import numpy as np
 import pandas as pd
 
+from perfana.monte_carlo._utility import infer_frequency
 from perfana.types import Vector
 from ._types import Frequency
 from .returns import annualized_returns_m
@@ -18,6 +19,7 @@ def sensitivity_m(data: np.ndarray,
                   geometric: bool = True,
                   rebalance: bool = True,
                   cov: np.ndarray = None,
+                  cvar_cutoff: int = 3,
                   alpha=0.95,
                   invert=True,
                   names: List[str] = None,
@@ -67,6 +69,9 @@ def sensitivity_m(data: np.ndarray,
     cov: ndarray
         Asset covariance matrix
 
+    cvar_cutoff: int
+        Number of years to trim the data cube by for cvar calculation.
+
     alpha: float
         Confidence level for calculation.
 
@@ -112,7 +117,9 @@ def sensitivity_m(data: np.ndarray,
     Asset_7  0.020220  0.106140 -0.468692
     """
     assert -1 <= shock <= 1, "shock must be between [-1, 1]"
+    assert isinstance(cvar_cutoff, int) and cvar_cutoff > 0, "cvar_cutoff must be a positive integer"
     weights = np.ravel(weights)
+    freq = infer_frequency(freq)
 
     if leveraged:
         min_shock = shock
@@ -120,7 +127,7 @@ def sensitivity_m(data: np.ndarray,
         if shock < 0:
             # prevents shocks beyond the asset's current allocation. That is if the shock is
             # -5% and the asset only has 2% allocation, then the shock is effectively -2%.
-            min_shock = -np.minimum(weights, shock)
+            min_shock = np.minimum(weights, -shock)
         else:
             # prevent shocks that bring the assets beyond 100% allocation.
             min_shock = np.minimum(1 - weights, shock)
@@ -146,7 +153,7 @@ def sensitivity_m(data: np.ndarray,
         w = weights + r
         res["ret"].append(annualized_returns_m(data, w, freq, geometric, rebalance))
         res["vol"].append(volatility_m(cov_or_data, w, freq))
-        res["cvar"].append(cvar_m(data, w, alpha, rebalance, invert))
+        res["cvar"].append(cvar_m(data[:cvar_cutoff * freq], w, alpha, rebalance, invert))
 
     if names is None:
         names = [f"Asset_{i + 1}" for i in range(n)]
