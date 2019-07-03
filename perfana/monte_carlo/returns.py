@@ -494,10 +494,9 @@ def returns_path(data: np.ndarray,
 
     The first axis represents the time and the second axis represents the trials.
 
-    If the :code:`quantile` argument is specified, the specific quantile will be returned.
-    The quantile is determined by the terminal value. Thus if selecting the 75th percentile,
-    the path returned is the path that the 75th percentile took over its course. If the
-    :code:`quantile` argument is not specified, it returns all the paths.
+    If the :code:`quantile` argument is specified, the specific quantile for each time period will be
+    returned. Thus, if the 0.75 quantile is specified, it is the 75th quantile for each time period and
+    not the path the 75th quantile in the terminal period took.
 
     Parameters
     ----------
@@ -527,11 +526,11 @@ def returns_path(data: np.ndarray,
     >>> cube = load_cube()[..., :3]
     >>> weights = [0.33, 0.34, 0.33]
     >>> returns_path(cube, weights).shape
-    (81, 1000)
+    (1000, 81)
     >>> returns_path(cube, weights, quantile=0.75).shape  # 75th quantile
     (81, )
     >>> returns_path(cube, weights, quantile=[0.25, 0.5, 0.75]).shape  # 25th, 50th and 75th quantile
-    (81, 3)
+    (3, 81)
 
     .. plot:: plots/returns_path.py
         :include-source:
@@ -543,24 +542,17 @@ def returns_path(data: np.ndarray,
     data = np.append(np.zeros([1, n, a]), data, 0)
 
     if rebalance:
-        d = (data @ w + 1).cumprod(0) - 1
+        d = (data @ w + 1).cumprod(0)
     else:
-        d = (data + 1).cumprod(0) @ w - 1
+        d = (data + 1).cumprod(0) @ w
 
-    terminal = d[-1]
-    if quantile is not None:
-        if not is_iterable(quantile):
-            quantile = [quantile]
+    if quantile is None:
+        return d.T
 
-        quantile = np.asarray(quantile)
-        assert np.alltrue([0 <= quantile, quantile <= 1]), "quantile values must be between 0 and 1"
+    if not is_iterable(quantile):
+        quantile = [quantile]
 
-        # quantile indices, minus one because python is 0-indexed
-        q = np.maximum(np.round(quantile * n).astype(int) - 1, 0)
+    quantile = np.asarray(quantile)
+    assert np.alltrue([0 <= quantile, quantile <= 1]), "quantile values must be between 0 and 1"
 
-        indices = np.argsort(terminal)
-        # reorder path array by terminal order indices then select the indices desired
-        return np.squeeze(d[:, indices][:, q])
-
-    else:
-        return d
+    return np.squeeze(np.quantile(d, quantile, 1))
