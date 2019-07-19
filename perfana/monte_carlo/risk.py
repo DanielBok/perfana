@@ -808,7 +808,7 @@ def vol_attr(cov_or_data: np.ndarray,
     vol = volatility_m(cov, weights)
     attr = (weights * (cov @ weights)) / (weights @ cov @ weights.T)
 
-    return Attribution(attr, vol * attr)
+    return Attribution(vol * attr, attr)
 
 
 def volatility_m(cov_or_data: np.ndarray,
