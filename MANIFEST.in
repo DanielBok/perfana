@@ -3,15 +3,13 @@ include LICENSE
 include README.md
 include setup.py
 include *.rst
-
-recursive-include perfana/datasets *.csv
+graft perfana
 
 global-exclude *.py[co]
 
 prune .pytest_cache
 prune docs
-
-graft perfana
+prune perfana/datasets/data
 
 include versioneer.py
 include perfana/_version.py
