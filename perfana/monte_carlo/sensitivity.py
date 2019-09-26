@@ -124,7 +124,6 @@ def sensitivity_m(data: np.ndarray,
     Asset_7  0.020220  0.106140 -0.468692
     """
     assert isinstance(cvar_cutoff, int) and cvar_cutoff > 0, "cvar_cutoff must be a positive integer"
-    weights, rows, names = _setup(weights, shock, leveraged, distribute, names)
     cov_or_data = data if cov is None else cov
 
     if cvar_data is None:
@@ -135,7 +134,7 @@ def sensitivity_m(data: np.ndarray,
     vol = sensitivity_vol_m(cov_or_data, weights, freq, shock, names, leveraged, distribute)
     cvar = sensitivity_cvar_m(cvar_data, weights, shock, alpha, rebalance, invert, names, leveraged, distribute)
 
-    return (pd.merge(ret, vol, left_index=True, right_index=True).merge(cvar, left_index=True, right_index=True))
+    return pd.merge(ret, vol, left_index=True, right_index=True).merge(cvar, left_index=True, right_index=True)
 
 
 def sensitivity_cvar_m(data: np.ndarray,
@@ -223,8 +222,9 @@ def sensitivity_cvar_m(data: np.ndarray,
     Asset_7   -0.468692
     Name: cvar, dtype: float64
     """
-    weights, rows, names = _setup(weights, shock, leveraged, distribute, names)
-    cvar = [cvar_m(data, weights + r, alpha, rebalance, invert) for r in rows]
+    weight_matrix = _setup(weights, shock, leveraged, distribute)
+    names = _setup_names(weights, names)
+    cvar = [cvar_m(data, w, alpha, rebalance, invert) for w in weight_matrix]
 
     return pd.Series(cvar, names, name="cvar")
 
@@ -316,8 +316,9 @@ def sensitivity_returns_m(data: np.ndarray,
     Asset_7    0.020220
     Name: ret, dtype: float64
     """
-    weights, rows, names = _setup(weights, shock, leveraged, distribute, names)
-    ret = [annualized_returns_m(data, weights + r, freq, geometric, rebalance) for r in rows]
+    weight_matrix = _setup(weights, shock, leveraged, distribute)
+    names = _setup_names(weights, names)
+    ret = [annualized_returns_m(data, w, freq, geometric, rebalance) for w in weight_matrix]
 
     return pd.Series(ret, names, name="ret")
 
@@ -386,8 +387,9 @@ def sensitivity_vol_m(cov_or_data: np.ndarray,
     Asset_7    0.106140
     Name: vol, dtype: float64
     """
-    weights, rows, names = _setup(weights, shock, leveraged, distribute, names)
-    vol = [volatility_m(cov_or_data, weights + r, freq) for r in rows]
+    weight_matrix = _setup(weights, shock, leveraged, distribute)
+    names = _setup_names(weights, names)
+    vol = [volatility_m(cov_or_data, w, freq) for w in weight_matrix]
 
     return pd.Series(vol, names, name="vol")
 
@@ -401,28 +403,35 @@ def _setup(weights: Vector,
     assert -1 <= shock <= 1, "shock must be between [-1, 1]"
     weights = np.ravel(weights)
 
-    if leveraged:
-        min_shock = shock
-    else:
-        if shock < 0:
-            # prevents shocks beyond the asset's current allocation. That is if the shock is
-            # -5% and the asset only has 2% allocation, then the shock is effectively -2%.
-            min_shock = np.minimum(weights, -shock)
-        else:
-            # prevent shocks that bring the assets beyond 100% allocation.
-            min_shock = np.minimum(1 - weights, shock)
+    # if leverage is True:
+    # Prevents shocks beyond the asset's current allocation. That is if the shock is
+    # -5% and the asset only has 2% allocation, then the shock is effectively -2%.
+    # And prevent shocks that bring the assets beyond 100% allocation.
+    shocks = np.array([
+        shock if (0 <= w + shock <= 1) or leveraged else
+        -w if shock < 0 else 1 - w
+        for w in weights
+    ])
 
     n = len(weights)
 
+    matrix = np.tile(weights, (n, 1)) + np.diag(shocks)
     if distribute:
-        e, o = np.eye(n), np.ones((n, n))
-        r = (o - e) * weights
+        weight_matrix = np.tile(weights, (n, 1))
+        np.fill_diagonal(weight_matrix, 0)
 
-        rows = e * min_shock - (min_shock / r.sum(1) * r.T).T
-    else:
-        rows = min_shock * np.eye(n)
+        matrix -= weight_matrix * (shocks / weight_matrix.sum(1))[:, None]
 
     if names is None:
         names = [f"Asset_{i + 1}" for i in range(len(weights))]
 
-    return weights, rows, names
+    return matrix, names
+
+
+def _setup_names(weights: np.ndarray, names: List[str] = None):
+    if names is None:
+        return [f"Asset_{i + 1}" for i in range(len(weights))]
+
+    names = list(names)
+    assert len(names) == len(weights), "number of names given is not equal to length of weight vector"
+    return names
