@@ -2,6 +2,10 @@ test:
 	python -m pytest tests/
 
 
+pypi:
+	python setup.py bdist_wheel sdist
+
+
 conda:
 	conda build --output-folder dist conda.recipe
 
