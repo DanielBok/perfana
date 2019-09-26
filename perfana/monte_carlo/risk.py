@@ -742,7 +742,7 @@ def tracking_error_m(cov_or_data: np.ndarray,
     """
     weights = np.ravel(weights)
     bmk_weights = np.ravel(bmk_weights)
-    w = np.hstack((weights, (-1) * bmk_weights))
+    w = np.hstack((weights, -bmk_weights))
 
     cov = _get_covariance_matrix(cov_or_data, freq)
     return (w @ cov @ w.T) ** 0.5

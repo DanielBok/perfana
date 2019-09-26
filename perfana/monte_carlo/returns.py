@@ -135,14 +135,12 @@ def annualized_bmk_returns_m(data: np.ndarray,
     >>> annualized_bmk_returns_m(cube, weights, bmk_weights, freq)
     -0.006819613944426206
     """
-
     freq = infer_frequency(freq)
     w1, w2 = np.ravel(weights), np.ravel(bmk_weights)
     y = len(data) / freq  # number of years
     n = len(w1)
     port, bmk = data[..., :n], data[..., n:]
 
-    # TODO check implementation of the arithmetic mean
     if rebalance:
         if geometric:
             d = ((port @ w1) + 1).prod(0) / ((bmk @ w2) + 1).prod(0)
