@@ -397,8 +397,7 @@ def sensitivity_vol_m(cov_or_data: np.ndarray,
 def _setup(weights: Vector,
            shock: float = 0.05,
            leveraged=False,
-           distribute=True,
-           names: List[str] = None):
+           distribute=True):
     """Common setup for sensitivity analytics"""
     assert -1 <= shock <= 1, "shock must be between [-1, 1]"
     weights = np.ravel(weights)
@@ -422,10 +421,7 @@ def _setup(weights: Vector,
 
         matrix -= weight_matrix * (shocks / weight_matrix.sum(1))[:, None]
 
-    if names is None:
-        names = [f"Asset_{i + 1}" for i in range(len(weights))]
-
-    return matrix, names
+    return matrix
 
 
 def _setup_names(weights: np.ndarray, names: List[str] = None):
