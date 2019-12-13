@@ -8,15 +8,15 @@ def infer_frequency(f: Frequency) -> int:
 
     if isinstance(f, str):
         f = f.lower()
-        if f in ('week', 'weekly'):
+        if f in ('w', 'week', 'weekly'):
             return 52
-        if f in ('month', 'monthly'):
+        if f in ('m', 'month', 'monthly'):
             return 12
-        elif f in ('quarter', 'quarterly'):
+        elif f in ('q', 'quarter', 'quarterly'):
             return 4
-        elif f in ('semi-annual', 'semi-annually', 'semi-year', 'semi-yearly', 'half-year', 'half-yearly'):
+        elif f in ('sa', 'semi-annual', 'semi-annually'):
             return 2
-        elif f in ('annual', 'annually', 'year', 'yearly'):
+        elif f in ('a', 'y', 'annual', 'annually', 'year', 'yearly'):
             return 1
 
     assert f in (1, 2, 4, 12), \

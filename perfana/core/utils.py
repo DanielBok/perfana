@@ -18,7 +18,7 @@ def freq_to_scale(freq: str):
         return 6
     elif freq in ('q', 'quarter', 'quarterly'):
         return 4
-    elif freq in ('y', 'year', 'yearly', 'annual'):
+    elif freq in ('a', 'y', 'annual', 'annually', 'year', 'yearly'):
         return 1
     else:
         raise ValueError(f"Unknown frequency: {freq}")
