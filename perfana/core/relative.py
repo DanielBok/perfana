@@ -4,7 +4,7 @@ to a benchmark. Whilst returns have the same sort of functions, they are more sp
 thus not grouped here.
 """
 
-from typing import Union
+from typing import Dict, Union
 
 from perfana.conversions import to_time_series
 from perfana.types import TimeSeriesData
@@ -17,9 +17,11 @@ def relative_price_index(portfolio: TimeSeriesData,
                          benchmark: TimeSeriesData,
                          duration: Union[str, int] = 'monthly',
                          *,
-                         is_returns=False) -> TimeSeriesData:
+                         is_returns=False) -> Union[TimeSeriesData, Dict[str, TimeSeriesData]]:
     """
-    Computes the relative price index. The data is assumed to be daily.
+    Computes the relative price index through time. The data is assumed to be daily. If the
+    benchmark is a single series, a single TimeSeriesData will be returned. Otherwise,
+    a dictionary of TimeSeries will be returned where the keys are each individual benchmark
 
     Notes
     -----
@@ -35,10 +37,10 @@ def relative_price_index(portfolio: TimeSeriesData,
     Parameters
     ----------
     portfolio
-        The portfolio values vector or matrix. Do not put the portfolio returns in here
+        The portfolio values vector or matrix
 
     benchmark
-        The benchmark values. Do not put the portfolio returns in here
+        The benchmark values vector or matrix
 
     duration
         Duration to calculate the relative price index with. Either a string or positive integer value
@@ -51,8 +53,11 @@ def relative_price_index(portfolio: TimeSeriesData,
 
     Returns
     -------
-    TimeSeriesData
+    TimeSeriesData or dict of TimeSeriesData:
         A DataFrame of the relative price index between the assets in the portfolio against the benchmark
+        If multiple series are included in the benchmark, returns a dictionary where the keys are the
+        benchmarks' name and the values are the relative price index of the portfolio against that
+        particular benchmark
 
     Examples
     --------
@@ -73,6 +78,8 @@ def relative_price_index(portfolio: TimeSeriesData,
         return values.rolling(days_in_duration(duration)).apply(lambda x: x.prod())
 
     r = derive_rolling_returns(portfolio)
-    b = derive_rolling_returns(benchmark)
-
-    return r.subtract(b, axis='rows').dropna()
+    if hasattr(benchmark, 'columns'):
+        return {col: r.subtract(derive_rolling_returns(benchmark[col]), axis='rows').dropna()
+                for col in benchmark.columns}
+    else:
+        return r.subtract(derive_rolling_returns(benchmark), axis='rows').dropna()
