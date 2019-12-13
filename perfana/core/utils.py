@@ -1,8 +1,33 @@
+from typing import Union
+
 import pandas as pd
 
 from perfana.types import TimeSeriesData
 
-__all__ = ['freq_to_scale', 'infer_frequency']
+__all__ = ['days_in_duration', 'freq_to_scale', 'infer_frequency']
+
+
+def days_in_duration(duration: Union[str, int]):
+    """Returns the number of day in a specified duration"""
+    if isinstance(duration, int):
+        assert duration > 0, "duration must be a positive integer"
+        return duration
+
+    duration = duration.lower()
+    if duration in ('d', 'day', 'daily'):
+        return 1
+    elif duration in ('w', 'week', 'weekly'):
+        return 5
+    elif duration in ('m', 'month', 'monthly'):
+        return 22
+    elif duration in ('q', 'quarter', 'quarterly'):
+        return 66
+    elif duration in ('s', 'semi-annual', 'semi-annually'):
+        return 132
+    elif duration in ('a', 'y', 'annual', 'annually', 'year', 'yearly'):
+        return 264
+    else:
+        raise ValueError(f"Unknown period: {duration}")
 
 
 def freq_to_scale(freq: str):
