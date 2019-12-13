@@ -2,7 +2,7 @@ test:
 	python -m pytest tests/
 
 
-pypi:
+wheel:
 	python setup.py bdist_wheel sdist
 
 
