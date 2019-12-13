@@ -15,7 +15,7 @@ def active_premium(ra: TimeSeriesData,
                    rb: TimeSeriesData,
                    freq: Optional[str] = None,
                    geometric=True,
-                   prefixes=('AST', 'BMK')) -> TimeSeriesData:
+                   prefixes=('PRT', 'BMK')) -> TimeSeriesData:
     """
     The return on an investment's annualized return minus the benchmark's annualized return.
 
@@ -35,7 +35,7 @@ def active_premium(ra: TimeSeriesData,
 
     prefixes
         Prefix to apply to overlapping column names in the left and right side, respectively. This is also applied
-        when the column name is an integer (i.e. 0 -> AST_0). It is the default name of the Series data if there
+        when the column name is an integer (i.e. 0 -> PRT_0). It is the default name of the Series data if there
         are no name to the Series
 
     Returns
@@ -59,14 +59,8 @@ def active_premium(ra: TimeSeriesData,
               VBK
     BND  0.055385
     """
-    ra = to_time_series(ra)
-    rb = to_time_series(rb)
-
-    if isinstance(ra, pd.Series):
-        ra = pd.DataFrame(ra.rename(ra.name or prefixes[0]))
-
-    if isinstance(rb, pd.Series):
-        rb = pd.DataFrame(rb.rename(rb.name or prefixes[1]))
+    ra = _to_time_series(ra, prefixes[0])
+    rb = _to_time_series(rb, prefixes[1])
 
     freq = _determine_frequency(ra, rb, freq)
 
@@ -223,7 +217,7 @@ def excess_returns(ra: TimeSeriesData,
 
 def relative_returns(ra: TimeSeriesData,
                      rb: TimeSeriesData,
-                     prefixes=('AST', 'BMK')) -> TimeSeriesData:
+                     prefixes=('PRT', 'BMK')) -> TimeSeriesData:
     """
     Calculates the ratio of the cumulative performance for two assets through time
 
@@ -237,7 +231,7 @@ def relative_returns(ra: TimeSeriesData,
 
     prefixes:
         Prefix to apply to overlapping column names in the left and right side, respectively. This is also applied
-        when the column name is an integer (i.e. 0 -> AST_0). It is the default name of the Series data if there
+        when the column name is an integer (i.e. 0 -> PRT_0). It is the default name of the Series data if there
         are no name to the Series
 
     Returns
@@ -261,14 +255,8 @@ def relative_returns(ra: TimeSeriesData,
     2019-02-28      1.0  1.001492  1.001461  0.998348
     2019-03-01      1.0  0.987385  0.997042  0.988521
     """
-    ra = to_time_series(ra)
-    rb = to_time_series(rb)
-
-    if isinstance(ra, pd.Series):
-        ra = pd.DataFrame(ra.rename(ra.name or prefixes[0]))
-
-    if isinstance(rb, pd.Series):
-        rb = pd.DataFrame(rb.rename(rb.name or prefixes[1]))
+    ra = _to_time_series(ra, prefixes[0])
+    rb = _to_time_series(rb, prefixes[1])
 
     res = pd.DataFrame()
     for ca, a in ra.iteritems():
@@ -303,3 +291,10 @@ def _determine_frequency(ra, rb, freq):
             freq = fa
 
     return freq
+
+
+def _to_time_series(r, prefix):
+    r = to_time_series(r)
+    if isinstance(r, pd.Series):
+        r = pd.DataFrame(r.rename(r.name or prefix))
+    return r
