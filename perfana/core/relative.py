@@ -52,11 +52,17 @@ def correlation_measure(portfolio: TimeSeriesData,
     --------
     >>> from perfana.datasets import load_etf
     >>> from perfana.core import correlation_measure
-
     >>> etf = load_etf().dropna()
     >>> returns = etf.iloc[:, 1:]
     >>> benchmark = etf.iloc[:, 0]
     >>> correlation_measure(returns, benchmark, 'monthly').head()
+                     BND       VTI       VWO
+    Date
+    2007-05-10 -0.384576  0.890783  0.846000
+    2007-05-11 -0.525299  0.911693  0.857288
+    2007-05-14 -0.482180  0.912002  0.855114
+    2007-05-15 -0.439073  0.913992  0.842561
+    2007-05-16 -0.487110  0.899859  0.837781
     """
 
     def derive_returns(values):
@@ -123,11 +129,17 @@ def relative_price_index(portfolio: TimeSeriesData,
     --------
     >>> from perfana.datasets import load_etf
     >>> from perfana.core import relative_price_index
-
     >>> etf = load_etf().dropna()
     >>> returns = etf.iloc[:, 1:]
     >>> benchmark = etf.iloc[:, 0]
     >>> relative_price_index(returns, benchmark, 'monthly').head()
+                     BND       VTI       VWO
+    Date
+    2007-05-10 -0.016000  0.009433  0.000458
+    2007-05-11 -0.031772  0.008626  0.013009
+    2007-05-14 -0.016945  0.014056  0.008658
+    2007-05-15 -0.002772  0.020824  0.018758
+    2007-05-16  0.002791  0.025402  0.028448
     """
 
     def derive_rolling_returns(values):
@@ -135,7 +147,7 @@ def relative_price_index(portfolio: TimeSeriesData,
         if not is_returns:
             values = values.pct_change() + 1
 
-        return values.rolling(days_in_duration(duration)).apply(lambda x: x.prod())
+        return values.rolling(days_in_duration(duration)).apply(lambda x: x.prod(), raw=False)
 
     r = derive_rolling_returns(portfolio)
     if hasattr(benchmark, 'columns'):
