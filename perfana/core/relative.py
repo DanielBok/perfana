@@ -10,7 +10,67 @@ from perfana.conversions import to_time_series
 from perfana.types import TimeSeriesData
 from .utils import days_in_duration
 
-__all__ = ['relative_price_index']
+__all__ = ['correlation_measure', 'relative_price_index']
+
+
+def correlation_measure(portfolio: TimeSeriesData,
+                        benchmark: TimeSeriesData,
+                        duration: Union[str, int] = 'monthly',
+                        *,
+                        is_returns=False) -> Union[TimeSeriesData, Dict[str, TimeSeriesData]]:
+    """
+    Computes the correlation measure through time. The data is assumed to be daily. If the
+    benchmark is a single series, a single TimeSeriesData will be returned. Otherwise,
+    a dictionary of TimeSeries will be returned where the keys are each individual benchmark
+
+    Parameters
+    ----------
+    portfolio
+        The portfolio values vector or matrix
+
+    benchmark
+        The benchmark values vector or matrix
+
+    duration
+        Duration to calculate the relative price index with. Either a string or positive integer value
+        can be specified. Supported string values are 'day', 'week', 'month', 'quarter', 'semi-annual'
+        and 'year'
+
+    is_returns
+        Set this to true if the portfolio and benchmark values are in "returns" instead of raw values
+        (i.e. prices or raw index value)
+
+    Returns
+    -------
+    TimeSeriesData or dict of TimeSeriesData:
+        A DataFrame of the correlation measure between the assets in the portfolio against the benchmark
+        If multiple series are included in the benchmark, returns a dictionary where the keys are the
+        benchmarks' name and the values are the correlation measure of the portfolio against that
+        particular benchmark
+
+    Examples
+    --------
+    >>> from perfana.datasets import load_etf
+    >>> from perfana.core import correlation_measure
+
+    >>> etf = load_etf().dropna()
+    >>> returns = etf.iloc[:, 1:]
+    >>> benchmark = etf.iloc[:, 0]
+    >>> correlation_measure(returns, benchmark, 'monthly').head()
+    """
+
+    def derive_returns(values):
+        values = to_time_series(values)
+        return values.pct_change() if not is_returns else values
+
+    portfolio = derive_returns(portfolio)
+    benchmark = derive_returns(benchmark)
+    days = days_in_duration(duration)
+
+    if hasattr(benchmark, 'columns'):
+        return {col: portfolio.rolling(days).corr(benchmark[col]).dropna() for col in benchmark.columns}
+    else:
+        return portfolio.rolling(days).corr(benchmark).dropna()
 
 
 def relative_price_index(portfolio: TimeSeriesData,
