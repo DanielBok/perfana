@@ -73,9 +73,10 @@ def to_returns(prices: TimeSeriesData, log: bool = False) -> TimeSeriesData:
         return prices / prices.shift(1) - 1
 
 
-def to_time_series(data, dates: Optional[DateTimes] = None, fail_policy='ignore') -> TimeSeriesData:
+def to_time_series(data, dates: Optional[Union[DateTimes, str]] = None, fail_policy='ignore') -> TimeSeriesData:
     """
-    Casts the input data to a time series DataFrame or Series
+    Casts the input data to a time series DataFrame or Series. A TimeSeries is essentially a
+    dataframe or series where the index is a DatetimeIndex.
 
     Parameters
     ----------
@@ -87,7 +88,9 @@ def to_time_series(data, dates: Optional[DateTimes] = None, fail_policy='ignore'
 
     dates
         Sets the (datetime) index of the Series or DataFrame. If list of strings, each string
-        must be convertible to a datetime object.
+        must be convertible to a datetime object. If a single string is provided, the value must
+        be the name of the column which will be converted to date. If not provided, there must at
+        least be a column named 'date'.
 
     fail_policy
         Policy to use when no dates can be set as index. Use one of [ignore, raise].
@@ -114,15 +117,27 @@ def to_time_series(data, dates: Optional[DateTimes] = None, fail_policy='ignore'
     if fail_policy not in ('ignore', 'raise'):
         raise ValueError(f"Unknown <fail_policy>: {fail_policy}. Use one of [ignore, raise]")
 
+    # data is already a time-series dataframe
+    if isinstance(data.index, pd.DatetimeIndex):
+        return data
+
     if dates is not None:
-        dates = pd.to_datetime(dates).rename(None)
-        data.index = dates
+        if isinstance(dates, str):
+            data[dates] = pd.to_datetime(data[dates])
+            data = data.set_index(dates)
+        else:
+            data.index = pd.to_datetime(dates).rename('date')
+
     elif dates is None and isinstance(data, pd.DataFrame):
         for col in data.columns:
             if str(col).lower() == 'date':
-                data = data.copy()
-                data.index = pd.to_datetime(data.pop(col)).rename(None)
+                data[col] = pd.to_datetime(col)
+                data = data.set_index(col)
                 break
+        else:
+            if fail_policy == 'raise':
+                raise ValueError("No date columns in data")
+
     elif fail_policy == 'raise':
         raise ValueError(f"unable to add date to data index")
 
