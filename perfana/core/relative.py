@@ -6,6 +6,8 @@ thus not grouped here.
 
 from typing import Dict, Union
 
+import pandas as pd
+
 from perfana.conversions import to_time_series
 from perfana.types import TimeSeriesData
 from .utils import days_in_duration
@@ -17,7 +19,8 @@ def correlation_measure(portfolio: TimeSeriesData,
                         benchmark: TimeSeriesData,
                         duration: Union[str, int] = 'monthly',
                         *,
-                        is_returns=False) -> Union[TimeSeriesData, Dict[str, TimeSeriesData]]:
+                        is_returns=False,
+                        date_as_index=True) -> Union[TimeSeriesData, Dict[str, TimeSeriesData]]:
     """
     Computes the correlation measure through time. The data is assumed to be daily. If the
     benchmark is a single series, a single TimeSeriesData will be returned. Otherwise,
@@ -39,6 +42,10 @@ def correlation_measure(portfolio: TimeSeriesData,
     is_returns
         Set this to true if the portfolio and benchmark values are in "returns" instead of raw values
         (i.e. prices or raw index value)
+
+    date_as_index
+        If true, returns the date as the dataframe's index. Otherwise, the date is placed as a column
+        in the dataframe
 
     Returns
     -------
@@ -74,16 +81,18 @@ def correlation_measure(portfolio: TimeSeriesData,
     days = days_in_duration(duration)
 
     if hasattr(benchmark, 'columns'):
-        return {col: portfolio.rolling(days).corr(benchmark[col]).dropna() for col in benchmark.columns}
+        return {col: _format_data_frame(portfolio.rolling(days).corr(benchmark[col]), date_as_index)
+                for col in benchmark.columns}
     else:
-        return portfolio.rolling(days).corr(benchmark).dropna()
+        return _format_data_frame(portfolio.rolling(days).corr(benchmark), date_as_index)
 
 
 def relative_price_index(portfolio: TimeSeriesData,
                          benchmark: TimeSeriesData,
                          duration: Union[str, int] = 'monthly',
                          *,
-                         is_returns=False) -> Union[TimeSeriesData, Dict[str, TimeSeriesData]]:
+                         is_returns=False,
+                         date_as_index=True) -> Union[TimeSeriesData, Dict[str, TimeSeriesData]]:
     """
     Computes the relative price index through time. The data is assumed to be daily. If the
     benchmark is a single series, a single TimeSeriesData will be returned. Otherwise,
@@ -116,6 +125,10 @@ def relative_price_index(portfolio: TimeSeriesData,
     is_returns
         Set this to true if the portfolio and benchmark values are in "returns" instead of raw values
         (i.e. prices or raw index value)
+
+    date_as_index
+        If true, returns the date as the dataframe's index. Otherwise, the date is placed as a column
+        in the dataframe
 
     Returns
     -------
@@ -151,7 +164,15 @@ def relative_price_index(portfolio: TimeSeriesData,
 
     r = derive_rolling_returns(portfolio)
     if hasattr(benchmark, 'columns'):
-        return {col: r.subtract(derive_rolling_returns(benchmark[col]), axis='rows').dropna()
+        return {col: _format_data_frame(r.subtract(derive_rolling_returns(benchmark[col]), axis='rows'), date_as_index)
                 for col in benchmark.columns}
     else:
-        return r.subtract(derive_rolling_returns(benchmark), axis='rows').dropna()
+        return _format_data_frame(r.subtract(derive_rolling_returns(benchmark), axis='rows'), date_as_index)
+
+
+def _format_data_frame(df: pd.DataFrame, date_as_index: bool):
+    df = df.dropna(how='all')
+    if not date_as_index:
+        df = df.reset_index()
+
+    return df
