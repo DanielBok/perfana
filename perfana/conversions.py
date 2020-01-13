@@ -125,7 +125,7 @@ def to_time_series(data, dates: Optional[Union[DateTimes, str]] = None, fail_pol
     if dates is not None:
         if isinstance(dates, str):
             data[dates] = pd.to_datetime(data[dates])
-            data = data.set_index(dates)
+            data.set_index(dates, inplace=True)
         else:
             data.index = pd.to_datetime(dates).rename('date')
 
@@ -134,6 +134,7 @@ def to_time_series(data, dates: Optional[Union[DateTimes, str]] = None, fail_pol
             if name.lower() == "date":
                 if not is_datetime(col):
                     data[name] = pd.to_datetime(col)
+                    data.set_index("date", inplace=True)
                 break
         else:
             if fail_policy == 'raise':
@@ -142,4 +143,8 @@ def to_time_series(data, dates: Optional[Union[DateTimes, str]] = None, fail_pol
     elif fail_policy == 'raise':
         raise ValueError(f"unable to add date to data index")
 
-    return data.astype(float)
+    # tries converting data to numeric
+    for name, col in data.iteritems():
+        data[name] = pd.to_numeric(col, 'ignore')
+
+    return data
