@@ -3,6 +3,7 @@ from typing import Optional, Union
 
 import numpy as np
 import pandas as pd
+from pandas.api.types import is_datetime64_any_dtype as is_datetime
 
 from perfana.types import DateTimes, TimeSeriesData, Vector
 
@@ -129,10 +130,10 @@ def to_time_series(data, dates: Optional[Union[DateTimes, str]] = None, fail_pol
             data.index = pd.to_datetime(dates).rename('date')
 
     elif dates is None and isinstance(data, pd.DataFrame):
-        for col in data.columns:
-            if str(col).lower() == 'date':
-                data[col] = pd.to_datetime(col)
-                data = data.set_index(col)
+        for name, col in data.iteritems():
+            if name.lower() == "date":
+                if not is_datetime(col):
+                    data[name] = pd.to_datetime(col)
                 break
         else:
             if fail_policy == 'raise':

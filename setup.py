@@ -31,6 +31,11 @@ setup(
         'Programming Language :: Python :: 3.7'
     ],
     install_requires=install_requires,
+    extras_require={
+        "plot": [
+            "matplotlib"
+        ]
+    },
     python_requires='>=3.7',
     zip_safe=False
 )
