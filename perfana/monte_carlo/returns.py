@@ -392,7 +392,6 @@ def returns_attr(data: np.ndarray,
     data = (data + 1).reshape(t // freq, freq, n, a).prod(1) - 1
     ar = data.mean((0, 1))  # arithmetic returns
 
-    # TODO Check if non-rebalanced attribution are still calculated similarly
     attr_p = (ar * weights) / (ar @ weights)
     attr_m = attr_p * gr
 
@@ -469,7 +468,7 @@ def returns_distribution(data: np.ndarray,
             if annualize:
                 d *= freq
     else:
-        d = ((data + 1).prod(0) @ w)
+        d = (data + 1).prod(0) @ w
         if geometric:
             if annualize:
                 d = (np.sign(d) * np.abs(d) ** (1 / y)) - 1

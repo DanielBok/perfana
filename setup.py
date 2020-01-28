@@ -17,6 +17,8 @@ setup(
     license='MIT',
     version=versioneer.get_version().split('+')[0],
     description='Toolbox for performance and portfolio analytics',
+    long_description=open('readme.md').read(),
+    long_description_content_type='text/markdown',
     author='Daniel Bok',
     author_email='daniel.bok@outlook.com',
     packages=find_packages(include=['perfana', 'perfana.*']),
